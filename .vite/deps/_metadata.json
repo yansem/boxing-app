@@ -1,0 +1,19 @@
+{
+  "hash": "41c6361b",
+  "browserHash": "166c9f4a",
+  "optimized": {
+    "vue": {
+      "src": "../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
+      "file": "vue.js",
+      "fileHash": "d9dc2d60",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "82983472",
+      "needsInterop": false
+    }
+  },
+  "chunks": {}
+}

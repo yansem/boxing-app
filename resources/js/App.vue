@@ -1,8 +1,12 @@
 <template>
+    <div v-if="isLoading" class="fixed top-0 left-0 w-screen h-screen flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
+        <div class="animate-spin rounded-full h-32 w-32 border-t-4 border-blue-500"></div>
+    </div>
+    <template v-else>
     <header class="bg-black flex justify-end">
         <div v-if="isAuth">
-            <button class="bg-yellow-400 py-2 px-4 rounded">Логин</button>
-            <button class="bg-yellow-400 py-2 px-4 rounded">Выйти</button>
+            <button class="bg-yellow-400 py-2 px-4 rounded">{{ user.login }}</button>
+            <button class="bg-yellow-400 py-2 px-4 rounded" @click="logout">Выйти</button>
         </div>
         <div v-else>
             <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowLogin = true">Войти</button>
@@ -185,7 +189,7 @@
             </button>
             <!-- Modal content, including form -->
             <h1 class="text-2xl font-semibold">Вход</h1>
-            <form class="mt-4">
+            <form @submit.prevent="submitLogin" class="mt-4">
                 <!-- Form inputs go here -->
                 <div class="mb-4">
                     <label for="login" class="block font-medium text-gray-700">Логин</label>
@@ -198,7 +202,7 @@
                            class="w-full p-2 border rounded-lg">
                 </div>
                 <!-- Add more form fields as needed -->
-                <button class="bg-yellow-400 py-2 px-4 rounded" @click="login">Ок</button>
+                <button class="bg-yellow-400 py-2 px-4 rounded">Ок</button>
             </form>
         </div>
     </div>
@@ -232,26 +236,36 @@
             </form>
         </div>
     </div>
+    </template>
 
 </template>
 
 <script setup>
+import useAuth from './composables/auth';
 import InputNumber from "./components/Form/InputNumber.vue";
 import InputCheckbox from "./components/Form/InputCheckbox.vue";
 import {ref, computed, reactive, onMounted} from "vue";
 
-const isAuth = ref(false);
+const {
+    user,
+    getUser,
+    isAuth,
+    isShowRegister,
+    isShowLogin,
+    loginForm,
+    registerForm,
+    registration,
+    submitLogin,
+    logout
+} = useAuth();
 
-const isShowRegister = ref(false);
-const isShowLogin = ref(false);
-const registerForm = reactive({
-    login: '',
-    password: ''
+const isLoading = ref(true);
+
+onMounted(async () => {
+    await getUser();
+    isLoading.value = false;
 });
-const loginForm = reactive({
-    login: '',
-    password: ''
-});
+
 const voices = ref([]);
 const voiceSelected = ref(null);
 let synth;
@@ -500,27 +514,4 @@ const removeRound = (index) => {
     rounds.value.splice(index, 1);
 }
 
-const registration = async () => {
-    await axios.post('/register', registerForm)
-        .then(response => {
-            isShowRegister.value = false;
-            isAuth.value = true;
-        })
-        .catch(error => {
-            console.log(error);
-        })
-}
-
-const login = async () => {
-    await axios.get('/sanctum/csrf-cookie').then(async response => {
-        await axios.post('/login', loginForm)
-            .then(response => {
-                isShowLogin.value = false;
-                isAuth.value = true;
-            })
-            .catch(error => {
-                console.log(error);
-            })
-    });
-}
 </script>
