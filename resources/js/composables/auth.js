@@ -43,16 +43,16 @@ export default function useAuth() {
     const loginUser = async (response) => {
         user.login = response.data.login
         isAuth.value = true
+        localStorage.setItem('loggedIn', JSON.stringify(true))
     }
 
     const getUser = async () => {
         await axios.get('/api/user')
             .then(response => {
-                console.log('1');
                 loginUser(response)
             })
             .catch(error => {
-                console.log('2');
+
             })
     }
 

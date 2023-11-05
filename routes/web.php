@@ -20,10 +20,11 @@ Route::post('login', [AuthenticatedSessionController::class, 'store']);
 Route::post('logout', [AuthenticatedSessionController::class, 'destroy']);
 Route::post('register', [RegisteredUserController::class, 'store']);
 
-Route::get('/', function () {
+Route::get('/{any?}', function () {
     return view('app');
 })
-    ->name('application');
+    ->name('application')
+    ->where('any', '.*');
 
 Route::get('/test', function () {
     return view('test');

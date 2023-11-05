@@ -1,250 +1,98 @@
 <template>
-    <div v-if="isLoading" class="fixed top-0 left-0 w-screen h-screen flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
-        <div class="animate-spin rounded-full h-32 w-32 border-t-4 border-blue-500"></div>
-    </div>
-    <template v-else>
-    <header class="bg-black flex justify-end">
-        <div v-if="isAuth">
-            <button class="bg-yellow-400 py-2 px-4 rounded">{{ user.login }}</button>
-            <button class="bg-yellow-400 py-2 px-4 rounded" @click="logout">Выйти</button>
+    <div>
+        <div v-if="isLoading"
+             class="fixed top-0 left-0 w-screen h-screen flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
+            <div class="animate-spin rounded-full h-32 w-32 border-t-4 border-blue-500"></div>
         </div>
-        <div v-else>
-            <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowLogin = true">Войти</button>
-            <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowRegister = true">Регистрация</button>
+        <template v-else>
+            <header class="bg-black">
+                <div class="flex">
+                    <router-link :to="{name: 'main'}" class="bg-yellow-400 py-2 px-4 rounded">Logo</router-link>
+                    <div class="flex-1">
+                        <div class="flex justify-end">
+                            <template v-if="isAuth">
+                                <router-link :to="{name: 'workouts'}" class="bg-yellow-400 py-2 px-4 rounded">Тренировки
+                                </router-link>
+                                <button class="bg-yellow-400 py-2 px-4 rounded">{{ user.login }}</button>
+                                <button class="bg-yellow-400 py-2 px-4 rounded" @click="logout">Выйти</button>
+                            </template>
+                            <template v-else>
+                                <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowLogin = true">Войти</button>
+                                <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowRegister = true">Регистрация</button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <router-view></router-view>
+        </template>
+        <div v-if="isShowLogin" class="fixed inset-0 flex items-center justify-center">
+            <div class="modal-bg absolute inset-0 bg-black opacity-50"></div>
+            <div class="modal-content bg-white p-4 rounded-lg relative">
+                <!-- Close button -->
+                <button id="closeModal"
+                        class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                              d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414z"/>
+                    </svg>
+                </button>
+                <!-- Modal content, including form -->
+                <h1 class="text-2xl font-semibold">Вход</h1>
+                <form @submit.prevent="submitLogin" class="mt-4">
+                    <!-- Form inputs go here -->
+                    <div class="mb-4">
+                        <label for="login" class="block font-medium text-gray-700">Логин</label>
+                        <input v-model="loginForm.login" type="text" id="login" name="login"
+                               class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="block font-medium text-gray-700">Пароль</label>
+                        <input v-model="loginForm.password" type="password" id="password" name="password"
+                               class="w-full p-2 border rounded-lg">
+                    </div>
+                    <!-- Add more form fields as needed -->
+                    <button class="bg-yellow-400 py-2 px-4 rounded">Ок</button>
+                </form>
+            </div>
         </div>
-    </header>
-    <div class="flex justify-center">
-        <table class="border-collapse border border-slate-400">
-            <tbody>
-            <tr>
-                <td class="border border-slate-300">Расширенный режим</td>
-                <td class="border border-slate-300 text-center">
-                    <input type="checkbox" id="expand" v-model="isExpand">
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Время подготовки</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="prepareTimeS" :id="'prepare-time'"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Общее время тренировки</td>
-                <td class="border border-slate-300 text-center">
-                    {{ totalTime }}
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Выберите голос озвучки</td>
-                <td class="border border-slate-300 text-center">
-                    <select v-model="voiceSelected">
-                        <option v-for="voice in voices" :value="voice">{{ voice.name }}</option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" class="border border-slate-300">
-                    <button class="w-full h-full bg-yellow-400 py-2 px-4 rounded" @click="start">Начать тренировку
-                        онлайн
-                    </button>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" class="border border-slate-300">
-                    <button class="w-full bg-yellow-400 py-2 px-4 rounded" @click="download">Скачать mp3</button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <hr class="w-full mb-2">
-    <div v-if="!isExpand" class="flex justify-center">
-        <table class="border-collapse border border-slate-400">
-            <tbody>
-            <tr>
-                <td class="border border-slate-300">Количество раундов</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="roundCount" :id="'round-count'"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Время раунда</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="roundTimeS" :id="'round-time'"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Количество ударов</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="punchCount" :id="'punch-count'"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300 ">Удары</td>
-                <td class="border border-slate-300">
-                    <div class="grid grid-cols-2 justify-items-center">
-                        <template v-for="punch in punches" :key="punch">
-                            <input-checkbox v-model="checked" :punch="punch"/>
-                        </template>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="all" v-model="selectAll">
-                        <label for="all">Все удары</label>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Интервал между ударами</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="restBetweenPunchS" :id="'rest-between-punch'"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Отдых между раундами</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="restBetweenRoundsS" :id="'rest-between-round'"/>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <div v-else class="flex">
-        <table v-for="(round, index) in rounds" :key="index" class="border-collapse border border-slate-400">
-            <tbody>
-            <tr>
-                <td colspan="2" class="border border-slate-300 text-center">
-                    Раунд {{ index + 1 }}
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Время раунда</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.roundTimeS" :id="'round-time' + index"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Количество ударов</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.punchCount" :id="'punch-count' + index"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300 ">Удары</td>
-                <td class="border border-slate-300">
-                    <div class="grid grid-cols-2 justify-items-center">
-                        <template v-for="punch in punches" :key="punch">
-                            <input-checkbox v-model="round.checked" :index="index" :punch="punch"/>
-                        </template>
-                    </div>
-                    <div>
-                        <input type="checkbox" :id="'all' + index" v-model="round.selectAll">
-                        <label :for="'all' + index">Все удары</label>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Интервал между ударами</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.restBetweenPunchS" :id="'rest-between-punch' + index"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Отдых после раунда</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.restBetweenRoundsS" :id="'rest-between-round' + index"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">
-                    <button @click="addRound(index)" class="w-full h-full bg-yellow-400 py-2 px-4 rounded">Добавить
-                        раунд до
-                    </button>
-                </td>
-                <td class="border border-slate-300">
-                    <button @click="addRound(index, 'after')" class="w-full h-full bg-yellow-400 py-2 px-4 rounded">
-                        Добавить раунд после
-                    </button>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" class="border border-slate-300">
-                    <button @click="removeRound(index)" class="w-full h-full bg-yellow-400 py-2 px-4 rounded">Удалить
-                        раунд
-                    </button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
 
-    <div v-if="isShowLogin" class="fixed inset-0 flex items-center justify-center">
-        <div class="modal-bg absolute inset-0 bg-black opacity-50"></div>
-        <div class="modal-content bg-white p-4 rounded-lg relative">
-            <!-- Close button -->
-            <button id="closeModal" class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                          d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414z"/>
-                </svg>
-            </button>
-            <!-- Modal content, including form -->
-            <h1 class="text-2xl font-semibold">Вход</h1>
-            <form @submit.prevent="submitLogin" class="mt-4">
-                <!-- Form inputs go here -->
-                <div class="mb-4">
-                    <label for="login" class="block font-medium text-gray-700">Логин</label>
-                    <input v-model="loginForm.login" type="text" id="login" name="login"
-                           class="w-full p-2 border rounded-lg">
-                </div>
-                <div class="mb-4">
-                    <label for="password" class="block font-medium text-gray-700">Пароль</label>
-                    <input v-model="loginForm.password" type="password" id="password" name="password"
-                           class="w-full p-2 border rounded-lg">
-                </div>
-                <!-- Add more form fields as needed -->
-                <button class="bg-yellow-400 py-2 px-4 rounded">Ок</button>
-            </form>
+        <div v-if="isShowRegister" class="fixed inset-0 flex items-center justify-center">
+            <div class="modal-bg absolute inset-0 bg-black opacity-50"></div>
+            <div class="modal-content bg-white p-4 rounded-lg relative">
+                <!-- Close button -->
+                <button class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                              d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414z"/>
+                    </svg>
+                </button>
+                <!-- Modal content, including form -->
+                <h1 class="text-2xl font-semibold">Регистрация</h1>
+                <form @submit.prevent="registration" class="mt-4">
+                    <!-- Form inputs go here -->
+                    <div class="mb-4">
+                        <label for="login" class="block font-medium text-gray-700">Логин</label>
+                        <input v-model="registerForm.login" type="text" id="login" name="login"
+                               class="w-full p-2 border rounded-lg">
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="block font-medium text-gray-700">Пароль</label>
+                        <input v-model="registerForm.password" type="password" id="password" name="password"
+                               class="w-full p-2 border rounded-lg">
+                    </div>
+                    <!-- Add more form fields as needed -->
+                    <button class="bg-yellow-400 py-2 px-4 rounded">Ок</button>
+                </form>
+            </div>
         </div>
     </div>
-
-    <div v-if="isShowRegister" class="fixed inset-0 flex items-center justify-center">
-        <div class="modal-bg absolute inset-0 bg-black opacity-50"></div>
-        <div class="modal-content bg-white p-4 rounded-lg relative">
-            <!-- Close button -->
-            <button class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                          d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414z"/>
-                </svg>
-            </button>
-            <!-- Modal content, including form -->
-            <h1 class="text-2xl font-semibold">Регистрация</h1>
-            <form @submit.prevent="registration" class="mt-4">
-                <!-- Form inputs go here -->
-                <div class="mb-4">
-                    <label for="login" class="block font-medium text-gray-700">Логин</label>
-                    <input v-model="registerForm.login" type="text" id="login" name="login"
-                           class="w-full p-2 border rounded-lg">
-                </div>
-                <div class="mb-4">
-                    <label for="password" class="block font-medium text-gray-700">Пароль</label>
-                    <input v-model="registerForm.password" type="password" id="password" name="password"
-                           class="w-full p-2 border rounded-lg">
-                </div>
-                <!-- Add more form fields as needed -->
-                <button class="bg-yellow-400 py-2 px-4 rounded">Ок</button>
-            </form>
-        </div>
-    </div>
-    </template>
-
 </template>
 
 <script setup>
-import useAuth from './composables/auth';
-import InputNumber from "./components/Form/InputNumber.vue";
-import InputCheckbox from "./components/Form/InputCheckbox.vue";
-import {ref, computed, reactive, onMounted} from "vue";
+import useAuth from '@/composables/auth';
+
+import {ref, onMounted} from "vue";
 
 const {
     user,
@@ -265,253 +113,5 @@ onMounted(async () => {
     await getUser();
     isLoading.value = false;
 });
-
-const voices = ref([]);
-const voiceSelected = ref(null);
-let synth;
-
-const speakText = async (punch) => {
-    const utterance = new SpeechSynthesisUtterance(punch);
-    utterance.voice = voiceSelected.value;
-    utterance.rate = 3;
-    utterance.onerror = function (event) {
-        console.error('Speech synthesis error:', event.error);
-    };
-    await new Promise(function (resolve) {
-        utterance.onend = resolve;
-        synth.cancel();
-        synth.speak(utterance);
-    });
-};
-
-const getVoices = () => {
-    if ('speechSynthesis' in window) {
-        synth = window.speechSynthesis;
-        synth.onvoiceschanged = () => {
-            voices.value = synth.getVoices();
-            voiceSelected.value = voices.value[0];
-
-        };
-    } else {
-        alert('Speech Synthesis API is not supported in your browser.');
-    }
-};
-onMounted(() => {
-    getVoices();
-})
-
-const punches = [1, 2, 3, 4, 5, 6, 7, 8];
-
-const checked = ref([1, 2, 3, 4, 5, 6, 7, 8]);
-
-const rounds = ref([
-    reactive({
-        roundTimeS: ref(20),
-        get roundTimeMs() {
-            return this.roundTimeS * 1000;
-        },
-        punchCount: ref(3),
-        restBetweenPunchS: ref(3),
-        get restBetweenPunchMs() {
-            return this.restBetweenPunchS * 1000;
-        },
-        restBetweenRoundsS: ref(10),
-        get restBetweenRoundsMs() {
-            return this.restBetweenRoundsS * 1000;
-        },
-        checked: reactive([1, 2, 3, 4, 5, 6, 7, 8]),
-        get selectAll() {
-            return this.checked.length === punches.length;
-        },
-        set selectAll(value) {
-            if (value) {
-                this.checked = [...punches];
-            } else {
-                this.checked = [];
-            }
-        }
-    })
-]);
-
-const bell = new Audio('/storage/sounds/bell.wav');
-
-const selectAll = computed({
-    get() {
-        return checked.value.length === punches.length;
-    },
-    set(value) {
-        if (value) {
-            checked.value = [...punches];
-        } else {
-            checked.value = [];
-        }
-    }
-})
-
-const isExpand = ref(false);
-
-
-const roundCount = ref(3);
-const roundTimeS = ref(20);
-const roundTimeMs = computed(() => roundTimeS.value * 1000);
-const punchCount = ref(3);
-const restBetweenPunchS = ref(3);
-const restBetweenPunchMs = computed(() => restBetweenPunchS.value * 1000);
-const restBetweenRoundsS = ref(10);
-const restBetweenRoundsMs = computed(() => restBetweenRoundsS.value * 1000);
-const prepareTimeS = ref(3);
-const prepareTimeMs = computed(() => prepareTimeS.value * 1000);
-const totalTime = computed(() => {
-    return roundCount.value * roundTimeS.value + (roundCount.value - 1) * restBetweenRoundsS.value;
-});
-
-const debug = (msg = 'debug') => {
-    let s = 1;
-    console.log(msg);
-    return setInterval(() => {
-        console.log(s);
-        s++;
-    }, 1000);
-}
-
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-const playAudio = (audio) => {
-    return new Promise(resolve => {
-        audio.play();
-        audio.onended = resolve;
-    })
-}
-
-const playRandomPunch = async (roundChecked = null) => {
-    if (roundChecked) {
-        const punchIndex = Math.floor(Math.random() * roundChecked.length);
-        // const punchAudio = new Audio('/storage/sounds/' + roundChecked[punchIndex] + '.mp3');
-        speakText(roundChecked[punchIndex]);
-        // await playAudio(punchAudio);
-    } else {
-        const punchIndex = Math.floor(Math.random() * checked.value.length);
-        // const punchAudio = new Audio('/storage/sounds/' + checked.value[punchIndex] + '.mp3');
-        await speakText(checked.value[punchIndex]);
-        // await playAudio(punchAudio);
-    }
-}
-
-const calcSleep = async (end, ms) => {
-    if (Date.now() + ms < end) {
-        await sleep(ms);
-    } else {
-        await sleep(end - Date.now());
-    }
-}
-
-const download = async () => {
-    console.log('download');
-}
-
-const start = async () => {
-    let debugPrepare = debug('prepare');
-    await sleep(prepareTimeMs.value);
-    clearInterval(debugPrepare);
-    if (!isExpand.value) {
-        for (let round = 0; round < roundCount.value; round++) {
-
-            const start = Date.now();
-            const end = start + roundTimeMs.value;
-
-            const debugRound = debug('round');
-
-            await playAudio(bell);
-
-            let p = 0;
-            while (Date.now() < start + roundTimeMs.value) {
-                await playRandomPunch();
-                p++;
-                if (p === punchCount.value) {
-                    p = 0;
-                    await calcSleep(end, restBetweenPunchMs.value)
-                } else {
-                    await calcSleep(end, 100)
-                }
-            }
-
-            clearInterval(debugRound);
-
-            playAudio(bell);
-
-            if (round < roundCount.value - 1) {
-                const debugRest = debug('rest');
-                await sleep(restBetweenRoundsMs.value);
-                clearInterval(debugRest);
-            }
-        }
-    } else {
-        for (let round = 0; round < rounds.value.length; round++) {
-            const debugRound = debug('round');
-
-            const start = Date.now();
-            const end = start + rounds.value[round].roundTimeMs;
-
-            await playAudio(bell);
-
-            let p = 0;
-            while (Date.now() < start + rounds.value[round].roundTimeMs) {
-                await playRandomPunch(rounds.value[round].checked);
-                p++;
-                if (p === rounds.value[round].punchCount) {
-                    p = 0;
-                    await calcSleep(end, rounds.value[round].restBetweenPunchMs);
-                } else {
-                    await calcSleep(end, 1000);
-                }
-            }
-
-            clearInterval(debugRound);
-
-            playAudio(bell);
-
-            if (round < rounds.value.length - 1) {
-                const debugRest = debug('rest');
-                await sleep(rounds.value[round].restBetweenRoundsMs);
-                clearInterval(debugRest);
-            }
-        }
-    }
-}
-
-const addRound = (index, order = '') => {
-    rounds.value.splice((order === 'after' ? index + 1 : index), 0,
-        reactive({
-            roundTimeS: ref(20),
-            get roundTimeMs() {
-                return this.roundTimeS * 1000;
-            },
-            punchCount: ref(3),
-            restBetweenPunchS: ref(3),
-            get restBetweenPunchMs() {
-                return this.restBetweenPunchS * 1000;
-            },
-            restBetweenRoundsS: ref(10),
-            get restBetweenRoundsMs() {
-                return this.restBetweenRoundsS * 1000;
-            },
-            checked: reactive([1, 2, 3, 4, 5, 6, 7, 8]),
-            get selectAll() {
-                return this.checked.length === punches.length;
-            },
-            set selectAll(value) {
-                if (value) {
-                    this.checked = [...punches];
-                } else {
-                    this.checked = [];
-                }
-            }
-        })
-    );
-}
-
-const removeRound = (index) => {
-    rounds.value.splice(index, 1);
-}
 
 </script>
