@@ -5,26 +5,26 @@
             <tr>
                 <td class="border border-slate-300">Расширенный режим</td>
                 <td class="border border-slate-300 text-center">
-                    <input type="checkbox" id="expand" v-model="isExpand">
+                    <input :checked="workout.isExpand" @change="changeMode" type="checkbox" id="expand">
                 </td>
             </tr>
             <tr>
                 <td class="border border-slate-300">Время подготовки</td>
                 <td class="border border-slate-300">
-                    <input-number v-model="prepareTimeS" :id="'prepare-time'"/>
+                    <input-number v-model="workout.prepareTimeS" :id="'prepare-time'"/>
                 </td>
             </tr>
             <tr>
                 <td class="border border-slate-300">Общее время тренировки</td>
                 <td class="border border-slate-300 text-center">
-                    {{ totalTime }}
+                    {{ workout.totalTime }}
                 </td>
             </tr>
             <tr>
                 <td class="border border-slate-300">Выберите голос озвучки</td>
                 <td class="border border-slate-300 text-center">
-                    <select v-model="voiceSelected">
-                        <option v-for="voice in voices" :value="voice">{{ voice.name }}</option>
+                    <select v-model="workout.voiceSelected">
+                        <option v-for="voice in workout.voices" :value="voice">{{ voice.name }}</option>
                     </select>
                 </td>
             </tr>
@@ -39,25 +39,25 @@
         </table>
     </div>
     <hr class="w-full mb-2">
-    <div v-if="!isExpand" class="flex justify-center">
+    <div v-if="!workout.isExpand" class="flex justify-center">
         <table class="border-collapse border border-slate-400">
             <tbody>
             <tr>
                 <td class="border border-slate-300">Количество раундов</td>
                 <td class="border border-slate-300">
-                    <input-number v-model="simpleMode.roundCount" :id="'round-count'"/>
+                    <input-number v-model="workout.params.roundCount" :id="'round-count'"/>
                 </td>
             </tr>
             <tr>
                 <td class="border border-slate-300">Время раунда</td>
                 <td class="border border-slate-300">
-                    <input-number v-model="simpleMode.roundTimeS" :id="'round-time'"/>
+                    <input-number v-model="workout.params.roundTimeS" :id="'round-time'"/>
                 </td>
             </tr>
             <tr>
                 <td class="border border-slate-300">Количество ударов</td>
                 <td class="border border-slate-300">
-                    <input-number v-model="simpleMode.punchCount" :id="'punch-count'"/>
+                    <input-number v-model="workout.params.punchCount" :id="'punch-count'"/>
                 </td>
             </tr>
             <tr>
@@ -65,11 +65,11 @@
                 <td class="border border-slate-300">
                     <div class="grid grid-cols-2 justify-items-center">
                         <template v-for="punch in punches" :key="punch">
-                            <input-checkbox v-model="simpleMode.checked" :punch="punch"/>
+                            <input-checkbox v-model="workout.params.checked" :punch="punch"/>
                         </template>
                     </div>
                     <div>
-                        <input type="checkbox" id="all" v-model="simpleMode.selectAll">
+                        <input type="checkbox" id="all" v-model="workout.params.selectAll">
                         <label for="all">Все удары</label>
                     </div>
                 </td>
@@ -77,20 +77,20 @@
             <tr>
                 <td class="border border-slate-300">Интервал между ударами</td>
                 <td class="border border-slate-300">
-                    <input-number v-model="simpleMode.restBetweenPunchS" :id="'rest-between-punch'"/>
+                    <input-number v-model="workout.params.restBetweenPunchS" :id="'rest-between-punch'"/>
                 </td>
             </tr>
             <tr>
                 <td class="border border-slate-300">Отдых между раундами</td>
                 <td class="border border-slate-300">
-                    <input-number v-model="simpleMode.restBetweenRoundsS" :id="'rest-between-round'"/>
+                    <input-number v-model="workout.params.restBetweenRoundsS" :id="'rest-between-round'"/>
                 </td>
             </tr>
             </tbody>
         </table>
     </div>
     <div v-else class="flex">
-        <table v-for="(round, index) in expandMode" :key="index" class="border-collapse border border-slate-400">
+        <table v-for="(round, index) in workout.params" :key="index" class="border-collapse border border-slate-400">
             <tbody>
             <tr>
                 <td colspan="2" class="border border-slate-300 text-center">
@@ -166,18 +166,13 @@ import useWorkout from "@/composables/workout.js";
 import {onMounted} from "vue";
 
 const {
+    workout,
     punches,
-    isExpand,
-    simpleMode,
-    expandMode,
-    prepareTimeS,
-    totalTime,
     getVoices,
-    voices,
-    voiceSelected,
     start,
     addRound,
-    removeRound
+    removeRound,
+    changeMode
 } = useWorkout();
 
 onMounted(() => {

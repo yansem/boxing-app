@@ -3,9 +3,9 @@
         <aside class="w-64 bg-gray-500 p-4 h-screen">
             <button class="text-white text-2xl font-semibold mb-4">Добавить тренировку</button>
             <ul>
-                <li v-for="workout in workouts" class="mb-2">
-                    <button @click="workoutSelected = {...workout}" class="text-white hover:text-yellow-400">
-                        {{ workout.title }}
+                <li v-for="work in workouts" class="mb-2">
+                    <button @click="changeWorkout(work)" class="text-white hover:text-yellow-400">
+                        {{ work.title }}
                     </button>
                 </li>
             </ul>
@@ -16,26 +16,26 @@
                 <tr>
                     <td class="border border-slate-300">Расширенный режим</td>
                     <td class="border border-slate-300 text-center">
-                        <input type="checkbox" id="expand" v-model="workoutSelected.isExpand">
+                        <input :checked="workout.isExpand" @change="changeMode" type="checkbox" id="expand">
                     </td>
                 </tr>
                 <tr>
                     <td class="border border-slate-300">Время подготовки</td>
                     <td class="border border-slate-300">
-                        <input-number v-model="workoutSelected.prepareTimeS" :id="'prepare-time'"/>
+                        <input-number v-model="workout.prepareTimeS" :id="'prepare-time'"/>
                     </td>
                 </tr>
                 <tr>
                     <td class="border border-slate-300">Общее время тренировки</td>
                     <td class="border border-slate-300 text-center">
-                        {{ totalTime }}
+                        {{ workout.totalTime }}
                     </td>
                 </tr>
                 <tr>
                     <td class="border border-slate-300">Выберите голос озвучки</td>
                     <td class="border border-slate-300 text-center">
-                        <select v-model="workoutSelected.voiceSelected">
-                            <option v-for="voice in voices" :value="voice">{{ voice.name }}</option>
+                        <select v-model="workout.voiceSelected">
+                            <option v-for="voice in workout.voices" :value="voice">{{ voice.name }}</option>
                         </select>
                     </td>
                 </tr>
@@ -49,24 +49,24 @@
                 </tr>
                 </tbody>
             </table>
-            <table v-if="!workoutSelected.isExpand" class="border-collapse border border-slate-400 mx-auto">
+            <table v-if="!workout.isExpand" class="border-collapse border border-slate-400 mx-auto">
                 <tbody>
                 <tr>
                     <td class="border border-slate-300">Количество раундов</td>
                     <td class="border border-slate-300">
-                        <input-number v-model="workoutSelected.roundCount" :id="'round-count'"/>
+                        <input-number v-model="workout.params.roundCount" :id="'round-count'"/>
                     </td>
                 </tr>
                 <tr>
                     <td class="border border-slate-300">Время раунда</td>
                     <td class="border border-slate-300">
-                        <input-number v-model="workoutSelected.roundTimeS" :id="'round-time'"/>
+                        <input-number v-model="workout.params.roundTimeS" :id="'round-time'"/>
                     </td>
                 </tr>
                 <tr>
                     <td class="border border-slate-300">Количество ударов</td>
                     <td class="border border-slate-300">
-                        <input-number v-model="workoutSelected.punchCount" :id="'punch-count'"/>
+                        <input-number v-model="workout.params.punchCount" :id="'punch-count'"/>
                     </td>
                 </tr>
                 <tr>
@@ -74,11 +74,11 @@
                     <td class="border border-slate-300">
                         <div class="grid grid-cols-2 justify-items-center">
                             <template v-for="punch in punches" :key="punch">
-                                <input-checkbox v-model="workoutSelected.checked" :punch="punch"/>
+                                <input-checkbox v-model="workout.params.checked" :punch="punch"/>
                             </template>
                         </div>
                         <div>
-                            <input type="checkbox" id="all" v-model="selectAll">
+                            <input type="checkbox" id="all" v-model="workout.params.selectAll">
                             <label for="all">Все удары</label>
                         </div>
                     </td>
@@ -86,18 +86,18 @@
                 <tr>
                     <td class="border border-slate-300">Интервал между ударами</td>
                     <td class="border border-slate-300">
-                        <input-number v-model="workoutSelected.restBetweenPunchS" :id="'rest-between-punch'"/>
+                        <input-number v-model="workout.params.restBetweenPunchS" :id="'rest-between-punch'"/>
                     </td>
                 </tr>
                 <tr>
                     <td class="border border-slate-300">Отдых между раундами</td>
                     <td class="border border-slate-300">
-                        <input-number v-model="workoutSelected.restBetweenRoundsS" :id="'rest-between-round'"/>
+                        <input-number v-model="workout.params.restBetweenRoundsS" :id="'rest-between-round'"/>
                     </td>
                 </tr>
                 </tbody>
             </table>
-            <table v-else v-for="(round, index) in workoutSelected.rounds" :key="index" class="border-collapse border border-slate-400">
+            <table v-else v-for="(round, index) in workout.params" :key="index" class="border-collapse border border-slate-400">
                 <tbody>
                 <tr>
                     <td colspan="2" class="border border-slate-300 text-center">
@@ -167,38 +167,32 @@
                 </tbody>
             </table>
         </div>
-        <!--        <workout :workout-selected="workoutSelected"/>-->
+        <!--        <workout :workout-selected="workout"/>-->
     </div>
 </template>
 
 <script setup>
 import InputNumber from "@/components/Form/InputNumber.vue";
 import InputCheckbox from "@/components/Form/InputCheckbox.vue";
-
-import {ref, computed, reactive, onMounted} from "vue";
 import useWorkout from "@/composables/workout.js";
+import {onMounted} from "vue";
 
 const {
+    workout,
     workouts,
-    workoutSelected,
     punches,
-    isExpand,
-    simpleMode,
-    expandMode,
-    prepareTimeS,
-    totalTime,
     getVoices,
-    voices,
-    voiceSelected,
     getWorkouts,
     start,
     addRound,
-    removeRound
+    removeRound,
+    changeMode,
+    changeWorkout
 } = useWorkout();
 
-onMounted(() => {
-    getVoices();
-    getWorkouts();
+onMounted(async () => {
+    await getWorkouts();
+    await getVoices();
 })
 
 </script>
