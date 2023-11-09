@@ -1,11 +1,12 @@
-import {computed, reactive, ref, toRefs} from "vue";
+import {computed, ref} from "vue";
 
 let synth;
+const voices = ref([]);
 const bell = new Audio('/storage/sounds/bell.wav');
 const punches = [1, 2, 3, 4, 5, 6, 7, 8];
 const workouts = ref([]);
 
-const simpleMode = reactive({
+const simpleMode = {
     roundCount: 3,
     roundTimeS: 20,
     get roundTimeMs() {
@@ -27,84 +28,66 @@ const simpleMode = reactive({
     get restBetweenRoundsMs() {
         return this.restBetweenRoundsS * 1000;
     }
-});
+};
 
-const expandMode = [
-    reactive({
-        roundTimeS: 20,
-        get roundTimeMs() {
-            return this.roundTimeS * 1000;
-        },
-        punchCount: 3,
-        restBetweenPunchS: 3,
-        get restBetweenPunchMs() {
-            return this.restBetweenPunchS * 1000;
-        },
-        restBetweenRoundsS: 10,
-        get restBetweenRoundsMs() {
-            return this.restBetweenRoundsS * 1000;
-        },
-        checked: [1, 2, 3, 4, 5, 6, 7, 8],
-        get selectAll() {
-            return this.checked.length === punches.length;
-        },
-        set selectAll(value) {
-            this.checked = value ? [...punches] : [];
+const expandMode = {
+    roundTimeS: 20,
+    get roundTimeMs() {
+        return this.roundTimeS * 1000;
+    },
+    punchCount: 3,
+    restBetweenPunchS: 3,
+    get restBetweenPunchMs() {
+        return this.restBetweenPunchS * 1000;
+    },
+    restBetweenRoundsS: 10,
+    get restBetweenRoundsMs() {
+        return this.restBetweenRoundsS * 1000;
+    },
+    checked: [1, 2, 3, 4, 5, 6, 7, 8],
+    get selectAll() {
+        return this.checked.length === punches.length;
+    },
+    set selectAll(value) {
+        this.checked = value ? [...punches] : [];
+    }
+};
+
+const copyObject = (obj) => {
+    return Object.defineProperties({}, Object.getOwnPropertyDescriptors(obj));
+}
+
+const defineTotalTimeProp = (workout) => {
+    workout.totalTime = computed(() => {
+        if (!workout.isExpand) {
+            return workout.params.roundCount * workout.params.roundTimeS + (workout.params.roundCount - 1) * workout.params.restBetweenRoundsS;
+        } else {
+            let total = 0;
+            workout.params.forEach(round => {
+                total += parseInt(round.roundTimeS) + parseInt(round.restBetweenRoundsS);
+            })
+            total -= workout.params[workout.params.length - 1].restBetweenRoundsS;
+
+            return isNaN(total) ? 0 : total;
         }
-    })
-];
+    });
+}
 
 const workout = ref({
-    voices: [],
-    voiceSelected: null,
+    voiceSelected: 'Microsoft Irina - Russian (Russia)',
     isExpand: false,
     prepareTimeS: 3,
     get prepareTimeMs() {
         return this.prepareTimeS * 1000;
     },
-    params: {...toRefs(simpleMode)}
-    // params: {
-    //     roundCount: 3,
-    //     roundTimeS: 20,
-    //     get roundTimeMs() {
-    //         return this.roundTimeS * 1000;
-    //     },
-    //     punchCount: 3,
-    //     checked: [1, 2, 3, 4, 5, 6, 7, 8],
-    //     get selectAll() {
-    //         return this.checked.length === punches.length;
-    //     },
-    //     set selectAll(value) {
-    //         this.checked = value ? [...punches] : [];
-    //     },
-    //     restBetweenPunchS: 3,
-    //     get restBetweenPunchMs() {
-    //         return this.restBetweenPunchS * 1000;
-    //     },
-    //     restBetweenRoundsS: 10,
-    //     get restBetweenRoundsMs() {
-    //         return this.restBetweenRoundsS * 1000;
-    //     }
-    // }
+    params: copyObject(simpleMode)
 });
 
-workout.value.totalTime = computed(() => {
-    if (!workout.value.isExpand) {
-        return workout.value.params.roundCount * workout.value.params.roundTimeS + (workout.value.params.roundCount - 1) * workout.value.params.restBetweenRoundsS;
-    } else {
-        let total = 0;
-        workout.value.params.forEach(round => {
-            total += parseInt(round.roundTimeS) + parseInt(round.restBetweenRoundsS);
-        })
-        total -= workout.value.params[workout.value.params.length - 1].restBetweenRoundsS;
-
-        return isNaN(total) ? 0 : total;
-    }
-});
+defineTotalTimeProp(workout.value);
 
 const speakText = async (punch) => {
     const utterance = new SpeechSynthesisUtterance(punch);
-    utterance.voice = workout.value.voiceSelected;
+    utterance.voice = voices.value.find((voice) => voice.voiceURI === workout.value.voiceSelected);
     utterance.rate = 3;
     utterance.onerror = function (event) {
         console.error('Speech synthesis error:', event.error);
@@ -156,97 +139,38 @@ const calcSleep = async (end, ms) => {
     }
 }
 
-export default function useWorkout() {
-    const getWorkouts = () => {
-        workouts.value = [
-            {
-                id: 1,
-                title: 'Новая тренировка 1',
-                isExpand: false,
-                prepareTimeS: 3,
-                voiceSelected: null,
-                params: {
-                    roundCount: 3,
-                    roundTimeS: 20,
-                    punchCount: 3,
-                    checked: [1, 2, 3, 4, 5, 6, 7, 8],
-                    restBetweenPunchS: 3,
-                    restBetweenRoundsS: 10
-                }
-            },
-            {
-                id: 2,
-                title: 'Новая тренировка 2',
-                isExpand: true,
-                prepareTimeS: 3,
-                voiceSelected: null,
-                params: [
-                    {
-                        roundTimeS: 20,
-                        punchCount: 3,
-                        checked: [1, 2, 3],
-                        restBetweenPunchS: 3,
-                        restBetweenRoundsS: 10
-                    },
-                    {
-                        roundTimeS: 20,
-                        punchCount: 3,
-                        checked: [4, 5, 6, 7, 8],
-                        restBetweenPunchS: 3,
-                        restBetweenRoundsS: 10
-                    },
-                ]
-            }
-        ];
-        // get roundTimeMs() {
-        //     return this.roundTimeS * 1000;
-        // },
-        // get selectAll() {
-        //     return this.checked.length === punches.length;
-        // },
-        // set selectAll(value) {
-        //     if (value) {
-        //         this.checked = [...punches];
-        //     } else {
-        //         this.checked = [];
-        //     }
-        // },
-        // get restBetweenPunchMs() {
-        //     return this.restBetweenPunchS * 1000;
-        // },
-        // get restBetweenRoundsMs() {
-        //     return this.restBetweenRoundsS * 1000;
-        // }
-        Object.defineProperties(workouts.value[0],
+const defineWorkoutProps = (workout) => {
+    if (!workout.prepareTimeMs) {
+        Object.defineProperties(workout,
             {
                 prepareTimeMs: {
                     get: function () {
-                        return workouts.value[0].prepareTimeS * 1000;
+                        return workout.prepareTimeS * 1000;
                     }
                 }
             }
         );
-        if (!workouts.value[0].isExpand) {
-            Object.defineProperties(workouts.value[0].params,
+        if (!workout.isExpand) {
+            Object.defineProperties(workout.params,
                 {
                     roundTimeMs: {
                         get: function () {
-                            return workouts.value[0].params.roundTimeS * 1000;
+                            return workout.params.roundTimeS * 1000;
                         }
                     },
                     restBetweenPunchMs: {
                         get: function () {
-                            return workouts.value[0].params.restBetweenPunchS * 1000;
+                            return workout.params.restBetweenPunchS * 1000;
                         }
                     },
                     restBetweenRoundsMs: {
                         get: function () {
-                            return workouts.value[0].params.restBetweenRoundsS * 1000;
+                            return workout.params.restBetweenRoundsS * 1000;
                         }
                     },
                     selectAll: {
                         get: function () {
-                            return workouts.value[0].params.restBetweenRoundsS * 1000;
+                            return this.checked.length === punches.length;
                         },
                         set: function (value) {
                             this.checked = value ? [...punches] : [];
@@ -255,7 +179,7 @@ export default function useWorkout() {
                 }
             );
         } else {
-            workouts.value[0].params.forEach(round => {
+            workout.params.forEach(round => {
                 Object.defineProperties(round,
                     {
                         roundTimeMs: {
@@ -275,23 +199,73 @@ export default function useWorkout() {
                         },
                         selectAll: {
                             get: function () {
-                                return round.restBetweenRoundsS * 1000;
+                                return this.checked.length === punches.length;
+                            },
+                            set: function (value) {
+                                this.checked = value ? [...punches] : [];
                             }
                         }
                     }
                 );
             })
         }
+        defineTotalTimeProp(workout);
+    }
+}
 
-
+export default function useWorkout() {
+    const getWorkouts = () => {
+        workouts.value = [
+            {
+                id: 1,
+                title: 'Новая тренировка 1',
+                isExpand: false,
+                prepareTimeS: 3,
+                voiceSelected: 'Microsoft Irina - Russian (Russia)',
+                totalTime: null,
+                params: {
+                    roundCount: 3,
+                    roundTimeS: 20,
+                    punchCount: 3,
+                    checked: [1, 2, 3, 4, 5, 6, 7, 8],
+                    restBetweenPunchS: 3,
+                    restBetweenRoundsS: 10
+                }
+            },
+            {
+                id: 2,
+                title: 'Новая тренировка 2',
+                isExpand: true,
+                prepareTimeS: 3,
+                voiceSelected: 'Microsoft Irina - Russian (Russia)',
+                totalTIme: null,
+                params: [
+                    {
+                        roundTimeS: 20,
+                        punchCount: 3,
+                        checked: [1, 2, 3],
+                        restBetweenPunchS: 3,
+                        restBetweenRoundsS: 10
+                    },
+                    {
+                        roundTimeS: 20,
+                        punchCount: 3,
+                        checked: [4, 5, 6, 7, 8],
+                        restBetweenPunchS: 3,
+                        restBetweenRoundsS: 10
+                    },
+                ]
+            }
+        ];
+        defineWorkoutProps(workouts.value[0]);
         workout.value = workouts.value[0]
     }
     const getVoices = () => {
         if ('speechSynthesis' in window) {
             synth = window.speechSynthesis;
             synth.onvoiceschanged = () => {
-                workout.value.voices = synth.getVoices();
-                workout.value.voiceSelected = workout.value.voices[0];
+                voices.value = synth.getVoices();
+                workout.value.voiceSelected = voices.value[0].voiceURI;
 
             };
         } else {
@@ -370,30 +344,7 @@ export default function useWorkout() {
     };
 
     const addRound = (index, order = '') => {
-        workout.value.params.splice((order === 'after' ? index + 1 : index), 0,
-            reactive({
-                roundTimeS: ref(20),
-                get roundTimeMs() {
-                    return this.roundTimeS * 1000;
-                },
-                punchCount: ref(3),
-                restBetweenPunchS: ref(3),
-                get restBetweenPunchMs() {
-                    return this.restBetweenPunchS * 1000;
-                },
-                restBetweenRoundsS: ref(10),
-                get restBetweenRoundsMs() {
-                    return this.restBetweenRoundsS * 1000;
-                },
-                checked: reactive([1, 2, 3, 4, 5, 6, 7, 8]),
-                get selectAll() {
-                    return this.checked.length === punches.length;
-                },
-                set selectAll(value) {
-                    this.checked = value ? [...punches] : [];
-                }
-            })
-        );
+        workout.value.params.splice((order === 'after' ? index + 1 : index), 0, copyObject(expandMode));
     };
 
     const removeRound = (index) => {
@@ -402,76 +353,16 @@ export default function useWorkout() {
 
     const changeMode = () => {
         workout.value.isExpand = !workout.value.isExpand;
-        workout.value.params = workout.value.isExpand ? expandMode.map(obj => ({...toRefs(obj)})) : {...toRefs(simpleMode)};
+        workout.value.params = workout.value.isExpand ? [copyObject(expandMode)] : copyObject(simpleMode);
     };
 
     const changeWorkout = (work) => {
-        workout.value = {...work}
-        Object.defineProperties(workout.value,
-            {
-                prepareTimeMs: {
-                    get: function () {
-                        return workout.value.prepareTimeS * 1000;
-                    }
-                }
-            }
-        );
-        if (!workout.value.isExpand) {
-            Object.defineProperties(workout.value.params,
-                {
-                    roundTimeMs: {
-                        get: function () {
-                            return workout.value.params.roundTimeS * 1000;
-                        }
-                    },
-                    restBetweenPunchMs: {
-                        get: function () {
-                            return workout.value.params.restBetweenPunchS * 1000;
-                        }
-                    },
-                    restBetweenRoundsMs: {
-                        get: function () {
-                            return workout.value.params.restBetweenRoundsS * 1000;
-                        }
-                    },
-                    selectAll: {
-                        get: function () {
-                            return workout.value.params.restBetweenRoundsS * 1000;
-                        }
-                    }
-                }
-            );
-        } else {
-            workout.value.params.forEach(round => {
-                Object.defineProperties(round,
-                    {
-                        roundTimeMs: {
-                            get: function () {
-                                return round.roundTimeS * 1000;
-                            }
-                        },
-                        restBetweenPunchMs: {
-                            get: function () {
-                                return round.restBetweenPunchS * 1000;
-                            }
-                        },
-                        restBetweenRoundsMs: {
-                            get: function () {
-                                return round.restBetweenRoundsS * 1000;
-                            }
-                        },
-                        selectAll: {
-                            get: function () {
-                                return round.restBetweenRoundsS * 1000;
-                            }
-                        }
-                    }
-                );
-            })
-        }
+        defineWorkoutProps(work);
+        workout.value = {...work};
     }
 
     return {
+        voices,
         workout,
         workouts,
         punches,

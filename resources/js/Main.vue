@@ -24,7 +24,7 @@
                 <td class="border border-slate-300">Выберите голос озвучки</td>
                 <td class="border border-slate-300 text-center">
                     <select v-model="workout.voiceSelected">
-                        <option v-for="voice in workout.voices" :value="voice">{{ voice.name }}</option>
+                        <option v-for="voice in voices" :value="voice.voiceURI">{{ voice.name }}</option>
                     </select>
                 </td>
             </tr>
@@ -166,6 +166,7 @@ import useWorkout from "@/composables/workout.js";
 import {onMounted} from "vue";
 
 const {
+    voices,
     workout,
     punches,
     getVoices,
