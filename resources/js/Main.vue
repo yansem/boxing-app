@@ -39,145 +39,152 @@
         </table>
     </div>
     <hr class="w-full mb-2">
-    <div v-if="!workout.isExpand" class="flex justify-center">
-        <table class="border-collapse border border-slate-400">
-            <tbody>
-            <tr>
-                <td class="border border-slate-300">Количество раундов</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="workout.params.roundCount" :id="'round-count'"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Время раунда</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="workout.params.roundTimeS" :id="'round-time'"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Количество ударов</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="workout.params.punchCount" :id="'punch-count'"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300 ">Удары</td>
-                <td class="border border-slate-300">
-                    <div class="grid grid-cols-2 justify-items-center">
-                        <template v-for="punch in punches" :key="punch">
-                            <input-checkbox v-model="workout.params.checked" :punch="punch"/>
-                        </template>
-                    </div>
-                    <div>
-                        <input type="checkbox" id="all" v-model="workout.params.selectAll">
-                        <label for="all">Все удары</label>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Интервал между ударами</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="workout.params.restBetweenPunchS" :id="'rest-between-punch'"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Отдых между раундами</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="workout.params.restBetweenRoundsS" :id="'rest-between-round'"/>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <div v-else class="flex">
-        <table v-for="(round, index) in workout.params" :key="index" class="border-collapse border border-slate-400">
-            <tbody>
-            <tr>
-                <td colspan="2" class="border border-slate-300 text-center">
-                    Раунд {{ index + 1 }}
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Время раунда</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.roundTimeS" :id="'round-time' + index"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Количество ударов</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.punchCount" :id="'punch-count' + index"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300 ">Удары</td>
-                <td class="border border-slate-300">
-                    <div class="grid grid-cols-2 justify-items-center">
-                        <template v-for="punch in punches" :key="punch">
-                            <input-checkbox v-model="round.checked" :index="index" :punch="punch"/>
-                        </template>
-                    </div>
-                    <div>
-                        <input type="checkbox" :id="'all' + index" v-model="round.selectAll">
-                        <label :for="'all' + index">Все удары</label>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Интервал между ударами</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.restBetweenPunchS" :id="'rest-between-punch' + index"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">Отдых после раунда</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.restBetweenRoundsS" :id="'rest-between-round' + index"/>
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-slate-300">
-                    <button @click="addRound(index)" class="w-full h-full bg-yellow-400 py-2 px-4 rounded">Добавить
-                        раунд до
-                    </button>
-                </td>
-                <td class="border border-slate-300">
-                    <button @click="addRound(index, 'after')" class="w-full h-full bg-yellow-400 py-2 px-4 rounded">
-                        Добавить раунд после
-                    </button>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" class="border border-slate-300">
-                    <button @click="removeRound(index)" class="w-full h-full bg-yellow-400 py-2 px-4 rounded">Удалить
-                        раунд
-                    </button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+    <template v-if="workout.params">
+        <div v-if="!workout.isExpand" class="flex justify-center">
+            <table class="border-collapse border border-slate-400">
+                <tbody>
+                <tr>
+                    <td class="border border-slate-300">Количество раундов</td>
+                    <td class="border border-slate-300">
+                        <input-number v-model="workout.params.roundCount" :id="'round-count'"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300">Время раунда</td>
+                    <td class="border border-slate-300">
+                        <input-number v-model="workout.params.roundTimeS" :id="'round-time'"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300">Количество ударов</td>
+                    <td class="border border-slate-300">
+                        <input-number v-model="workout.params.punchCount" :id="'punch-count'"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300 ">Удары</td>
+                    <td class="border border-slate-300">
+                        <div class="grid grid-cols-2 justify-items-center">
+                            <template v-for="punch in punches" :key="punch">
+                                <input-checkbox v-model="workout.params.checked" :punch="punch"/>
+                            </template>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="all" v-model="workout.params.selectAll">
+                            <label for="all">Все удары</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300">Интервал между ударами</td>
+                    <td class="border border-slate-300">
+                        <input-number v-model="workout.params.restBetweenPunchS" :id="'rest-between-punch'"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300">Отдых между раундами</td>
+                    <td class="border border-slate-300">
+                        <input-number v-model="workout.params.restBetweenRoundsS" :id="'rest-between-round'"/>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div v-else class="flex">
+            <table v-for="(round, index) in workout.params" :key="index"
+                   class="border-collapse border border-slate-400">
+                <tbody>
+                <tr>
+                    <td colspan="2" class="border border-slate-300 text-center">
+                        Раунд {{ index + 1 }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300">Время раунда</td>
+                    <td class="border border-slate-300">
+                        <input-number v-model="round.roundTimeS" :id="'round-time' + index"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300">Количество ударов</td>
+                    <td class="border border-slate-300">
+                        <input-number v-model="round.punchCount" :id="'punch-count' + index"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300 ">Удары</td>
+                    <td class="border border-slate-300">
+                        <div class="grid grid-cols-2 justify-items-center">
+                            <template v-for="punch in punches" :key="punch">
+                                <input-checkbox v-model="round.checked" :index="index" :punch="punch"/>
+                            </template>
+                        </div>
+                        <div>
+                            <input type="checkbox" :id="'all' + index" v-model="round.selectAll">
+                            <label :for="'all' + index">Все удары</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300">Интервал между ударами</td>
+                    <td class="border border-slate-300">
+                        <input-number v-model="round.restBetweenPunchS" :id="'rest-between-punch' + index"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300">Отдых после раунда</td>
+                    <td class="border border-slate-300">
+                        <input-number v-model="round.restBetweenRoundsS" :id="'rest-between-round' + index"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border border-slate-300">
+                        <button @click="addRound(index)" class="w-full h-full bg-yellow-400 py-2 px-4 rounded">Добавить
+                            раунд до
+                        </button>
+                    </td>
+                    <td class="border border-slate-300">
+                        <button @click="addRound(index, 'after')" class="w-full h-full bg-yellow-400 py-2 px-4 rounded">
+                            Добавить раунд после
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="border border-slate-300">
+                        <button @click="removeRound(index)" class="w-full h-full bg-yellow-400 py-2 px-4 rounded">
+                            Удалить
+                            раунд
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </template>
 </template>
 
 <script setup>
 import InputNumber from "@/components/Form/InputNumber.vue";
 import InputCheckbox from "@/components/Form/InputCheckbox.vue";
 import useWorkout from "@/composables/workout.js";
-import {onMounted} from "vue";
+import {onBeforeMount, onMounted} from "vue";
+import {useRoute} from "vue-router";
 
 const {
     voices,
     workout,
     punches,
+    init,
     getVoices,
     start,
     addRound,
     removeRound,
-    changeMode
-} = useWorkout();
+    changeMode,
+    getWorkouts
+} = useWorkout(useRoute().name);
 
-onMounted(() => {
-    getVoices();
+onBeforeMount(async () => {
+    await init();
 })
 
 </script>

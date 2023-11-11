@@ -11,7 +11,7 @@
                     <div class="flex-1">
                         <div class="flex justify-end">
                             <template v-if="isAuth">
-                                <router-link :to="{name: 'workouts'}" class="bg-yellow-400 py-2 px-4 rounded">Тренировки
+                                <router-link :to="{name: 'workouts.index'}" class="bg-yellow-400 py-2 px-4 rounded">Тренировки
                                 </router-link>
                                 <button class="bg-yellow-400 py-2 px-4 rounded">{{ user.login }}</button>
                                 <button class="bg-yellow-400 py-2 px-4 rounded" @click="logout">Выйти</button>
@@ -92,7 +92,8 @@
 <script setup>
 import useAuth from '@/composables/auth';
 
-import {ref, onMounted} from "vue";
+import {ref, onMounted, onBeforeMount} from "vue";
+import useWorkout from "@/composables/workout.js";
 
 const {
     user,
@@ -104,13 +105,16 @@ const {
     registerForm,
     registration,
     submitLogin,
-    logout
+    logout,
 } = useAuth();
+
+const {getVoices} = useWorkout();
 
 const isLoading = ref(true);
 
-onMounted(async () => {
+onBeforeMount(async () => {
     await getUser();
+    await getVoices();
     isLoading.value = false;
 });
 

@@ -1,10 +1,14 @@
 import {computed, ref} from "vue";
+import {useRoute, useRouter} from "vue-router";
+import _ from "lodash";
 
 let synth;
-const voices = ref([]);
 const bell = new Audio('/storage/sounds/bell.wav');
+const voices = ref([]);
 const punches = [1, 2, 3, 4, 5, 6, 7, 8];
+const workout = ref({});
 const workouts = ref([]);
+const workoutsIsLoaded = ref(false);
 
 const simpleMode = {
     roundCount: 3,
@@ -73,18 +77,6 @@ const defineTotalTimeProp = (workout) => {
     });
 }
 
-const workout = ref({
-    voiceSelected: 'Microsoft Irina - Russian (Russia)',
-    isExpand: false,
-    prepareTimeS: 3,
-    get prepareTimeMs() {
-        return this.prepareTimeS * 1000;
-    },
-    params: copyObject(simpleMode)
-});
-
-defineTotalTimeProp(workout.value);
-
 const speakText = async (punch) => {
     const utterance = new SpeechSynthesisUtterance(punch);
     utterance.voice = voices.value.find((voice) => voice.voiceURI === workout.value.voiceSelected);
@@ -120,14 +112,10 @@ const playAudio = (audio) => {
 const playRandomPunch = async (roundChecked = null) => {
     if (roundChecked) {
         const punchIndex = Math.floor(Math.random() * roundChecked.length);
-        // const punchAudio = new Audio('/storage/sounds/' + roundChecked[punchIndex] + '.mp3');
         speakText(roundChecked[punchIndex]);
-        // await playAudio(punchAudio);
     } else {
         const punchIndex = Math.floor(Math.random() * workout.value.params.checked.length);
-        // const punchAudio = new Audio('/storage/sounds/' + checked.value[punchIndex] + '.mp3');
         await speakText(workout.value.params.checked[punchIndex]);
-        // await playAudio(punchAudio);
     }
 }
 
@@ -213,54 +201,43 @@ const defineWorkoutProps = (workout) => {
     }
 }
 
-export default function useWorkout() {
-    const getWorkouts = () => {
-        workouts.value = [
-            {
-                id: 1,
-                title: 'Новая тренировка 1',
-                isExpand: false,
-                prepareTimeS: 3,
-                voiceSelected: 'Microsoft Irina - Russian (Russia)',
-                totalTime: null,
-                params: {
-                    roundCount: 3,
-                    roundTimeS: 20,
-                    punchCount: 3,
-                    checked: [1, 2, 3, 4, 5, 6, 7, 8],
-                    restBetweenPunchS: 3,
-                    restBetweenRoundsS: 10
-                }
+export default function useWorkout(page = null) {
+    const init = async () => {
+        workout.value = {
+            voiceSelected: 'Microsoft Irina - Russian (Russia)',
+            isExpand: false,
+            prepareTimeS: 3,
+            get prepareTimeMs() {
+                return this.prepareTimeS * 1000;
             },
-            {
-                id: 2,
-                title: 'Новая тренировка 2',
-                isExpand: true,
-                prepareTimeS: 3,
-                voiceSelected: 'Microsoft Irina - Russian (Russia)',
-                totalTIme: null,
-                params: [
-                    {
-                        roundTimeS: 20,
-                        punchCount: 3,
-                        checked: [1, 2, 3],
-                        restBetweenPunchS: 3,
-                        restBetweenRoundsS: 10
-                    },
-                    {
-                        roundTimeS: 20,
-                        punchCount: 3,
-                        checked: [4, 5, 6, 7, 8],
-                        restBetweenPunchS: 3,
-                        restBetweenRoundsS: 10
-                    },
-                ]
+            params: copyObject(simpleMode),
+        };
+        defineTotalTimeProp(workout.value);
+
+        if (page === 'workouts.index') {
+            if (workouts.value.length > 0) {
+                const copiedWorkout = _.cloneDeep(workouts.value[0]);
+                defineWorkoutProps(copiedWorkout);
+                workout.value = copiedWorkout;
             }
-        ];
-        defineWorkoutProps(workouts.value[0]);
-        workout.value = workouts.value[0]
+        } else if (page === 'workouts.create') {
+            workout.value.title = workouts.value.length > 0
+                ? 'Новая тренировка ' + (workouts.value.length + 1)
+                : 'Новая тренировка 1'
+        }
+    };
+
+    const getWorkouts = async () => {
+        await axios.get('/api/workouts')
+            .then(response => {
+                workouts.value = response.data.data
+                workoutsIsLoaded.value = true
+            })
+            .catch(error => {
+
+            })
     }
-    const getVoices = () => {
+    const getVoices = async () => {
         if ('speechSynthesis' in window) {
             synth = window.speechSynthesis;
             synth.onvoiceschanged = () => {
@@ -351,14 +328,26 @@ export default function useWorkout() {
         workout.value.params.splice(index, 1);
     };
 
-    const changeMode = () => {
+    const changeMode = async () => {
         workout.value.isExpand = !workout.value.isExpand;
         workout.value.params = workout.value.isExpand ? [copyObject(expandMode)] : copyObject(simpleMode);
     };
 
     const changeWorkout = (work) => {
-        defineWorkoutProps(work);
-        workout.value = {...work};
+        const copiedWorkout = _.cloneDeep(work)
+        defineWorkoutProps(copiedWorkout);
+        workout.value = copiedWorkout;
+    }
+
+    const workoutStore = async () => {
+        await axios.post('/api/workouts', workout.value)
+            .then(async response => {
+                await getWorkouts();
+                await useRouter().push({name: 'workouts.index'})
+            })
+            .catch(error => {
+
+            })
     }
 
     return {
@@ -366,12 +355,16 @@ export default function useWorkout() {
         workout,
         workouts,
         punches,
+        workoutsIsLoaded,
+        init,
         getWorkouts,
         getVoices,
         start,
         addRound,
         removeRound,
         changeMode,
-        changeWorkout
+        changeWorkout,
+        workoutStore,
+        sleep
     }
 }

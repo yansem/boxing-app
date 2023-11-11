@@ -1,10 +1,14 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Workouts from "@/Workouts.vue";
+import Workouts from "@/pages/Workouts/Workouts.vue";
 import Main from "@/Main.vue";
+import Create from "@/pages/Workouts/Create.vue";
+import Index from "@/pages/Workouts/Index.vue";
 
 
 function auth(to, from, next) {
     if (JSON.parse(localStorage.getItem('loggedIn'))) {
+        next()
+    } else {
         next()
     }
 }
@@ -19,10 +23,20 @@ const routes = [
                 component: Main
             },
             {
-                path: '/workouts',
-                beforeEnter: auth,
-                name: 'workouts',
-                component: Workouts
+                path: 'workouts',
+                component: Workouts,
+                children: [
+                    {
+                        path: '',
+                        name: 'workouts.index',
+                        component: Index
+                    },
+                    {
+                        path: 'create',
+                        name: 'workouts.create',
+                        component: Create
+                    }
+                ],
             },
         ]
     }
