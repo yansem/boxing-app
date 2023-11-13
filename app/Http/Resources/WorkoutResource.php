@@ -15,6 +15,7 @@ class WorkoutResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'title' => $this->params['title'],
             'isExpand' => $this->params['isExpand'],
             'voiceSelected' => $this->params['voiceSelected'],

@@ -2,7 +2,8 @@ import { createRouter, createWebHistory } from "vue-router";
 import Workouts from "@/pages/Workouts/Workouts.vue";
 import Main from "@/Main.vue";
 import Create from "@/pages/Workouts/Create.vue";
-import Index from "@/pages/Workouts/Index.vue";
+import Show from "@/pages/Workouts/Show.vue";
+import useWorkout from "@/composables/workout.js";
 
 
 function auth(to, from, next) {
@@ -25,11 +26,12 @@ const routes = [
             {
                 path: 'workouts',
                 component: Workouts,
+                name: 'workouts',
                 children: [
                     {
-                        path: '',
-                        name: 'workouts.index',
-                        component: Index
+                        path: ':id',
+                        name: 'workouts.show',
+                        component: Show
                     },
                     {
                         path: 'create',

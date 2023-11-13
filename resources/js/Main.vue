@@ -167,7 +167,7 @@
 import InputNumber from "@/components/Form/InputNumber.vue";
 import InputCheckbox from "@/components/Form/InputCheckbox.vue";
 import useWorkout from "@/composables/workout.js";
-import {onBeforeMount, onMounted} from "vue";
+import {onBeforeMount} from "vue";
 import {useRoute} from "vue-router";
 
 const {

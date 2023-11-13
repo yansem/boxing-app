@@ -1,4 +1,5 @@
 import {reactive, ref} from "vue";
+import useWorkout from "@/composables/workout.js";
 
 const isAuth = ref(false);
 const isShowRegister = ref(false);
@@ -15,7 +16,7 @@ const user = reactive({
     login: ''
 })
 
-export default function useAuth() {
+export default function useAuth(getWorkouts) {
     const registration = async () => {
         await axios.post('/register', registerForm)
             .then(response => {
@@ -43,6 +44,7 @@ export default function useAuth() {
     const loginUser = async (response) => {
         user.login = response.data.login
         isAuth.value = true
+        await getWorkouts();
         localStorage.setItem('loggedIn', JSON.stringify(true))
     }
 

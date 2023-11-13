@@ -1,6 +1,6 @@
 import {computed, ref} from "vue";
 import _ from "lodash";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 
 let synth;
 const bell = new Audio('/storage/sounds/bell.wav');
@@ -203,6 +203,7 @@ const defineWorkoutProps = (workout) => {
 
 export default function useWorkout(page = null) {
     const router = useRouter();
+    const route = useRoute();
     const init = async () => {
         workout.value = {
             voiceSelected: 'Microsoft Irina - Russian (Russia)',
@@ -215,9 +216,10 @@ export default function useWorkout(page = null) {
         };
         defineTotalTimeProp(workout.value);
 
-        if (page === 'workouts.index') {
+
+        if (page === 'workouts.show') {
             if (workouts.value.length > 0) {
-                const copiedWorkout = _.cloneDeep(workouts.value[0]);
+                const copiedWorkout = _.cloneDeep(workouts.value.find(work => work.id == route.params.id));
                 defineWorkoutProps(copiedWorkout);
                 workout.value = copiedWorkout;
             }
@@ -237,7 +239,8 @@ export default function useWorkout(page = null) {
             .catch(error => {
 
             })
-    }
+    };
+
     const getVoices = async () => {
         if ('speechSynthesis' in window) {
             synth = window.speechSynthesis;
@@ -334,14 +337,6 @@ export default function useWorkout(page = null) {
         workout.value.params = workout.value.isExpand ? [copyObject(expandMode)] : copyObject(simpleMode);
     };
 
-    const changeWorkout = async (work) => {
-        if (page !== 'workouts.index')
-            await router.push({name: 'workouts.index'})
-        const copiedWorkout = _.cloneDeep(work)
-        defineWorkoutProps(copiedWorkout);
-        workout.value = copiedWorkout;
-    }
-
     const workoutStore = async () => {
         await axios.post('/api/workouts', workout.value)
             .then(async response => {
@@ -351,7 +346,7 @@ export default function useWorkout(page = null) {
 
             })
 
-        await router.push({name: 'workouts.index'})
+        await router.push({name: 'workouts.show', params: {id: workouts.value[workouts.value.length - 1].id}})
     }
 
     return {
@@ -367,8 +362,6 @@ export default function useWorkout(page = null) {
         addRound,
         removeRound,
         changeMode,
-        changeWorkout,
-        workoutStore,
-        sleep
+        workoutStore
     }
 }

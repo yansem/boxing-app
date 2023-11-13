@@ -1,4 +1,5 @@
 <template>
+    {{ route.params.id }}
     <template v-if="workouts.length > 0">
         <table class="border-collapse border border-slate-400">
             <tbody>
@@ -174,8 +175,11 @@
 import InputNumber from "@/components/Form/InputNumber.vue";
 import InputCheckbox from "@/components/Form/InputCheckbox.vue";
 import useWorkout from "@/composables/workout.js";
-import {onMounted} from "vue";
-import {useRoute} from "vue-router";
+import {onMounted, watch} from "vue";
+import {useRoute, useRouter} from "vue-router";
+
+const route = useRoute();
+const router = useRouter();
 
 const {
     voices,
@@ -192,5 +196,12 @@ const {
 onMounted(async () => {
     await init();
 })
+
+watch(() => router.currentRoute.value.params.id, (newId, oldId) => {
+    if (router.currentRoute.value.name === 'workouts.show')
+        if (newId !== oldId) {
+            init();
+        }
+});
 
 </script>
