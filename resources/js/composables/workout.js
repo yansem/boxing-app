@@ -1,6 +1,6 @@
 import {computed, ref} from "vue";
-import {useRoute, useRouter} from "vue-router";
 import _ from "lodash";
+import {useRouter} from "vue-router";
 
 let synth;
 const bell = new Audio('/storage/sounds/bell.wav');
@@ -202,6 +202,7 @@ const defineWorkoutProps = (workout) => {
 }
 
 export default function useWorkout(page = null) {
+    const router = useRouter();
     const init = async () => {
         workout.value = {
             voiceSelected: 'Microsoft Irina - Russian (Russia)',
@@ -333,7 +334,9 @@ export default function useWorkout(page = null) {
         workout.value.params = workout.value.isExpand ? [copyObject(expandMode)] : copyObject(simpleMode);
     };
 
-    const changeWorkout = (work) => {
+    const changeWorkout = async (work) => {
+        if (page !== 'workouts.index')
+            await router.push({name: 'workouts.index'})
         const copiedWorkout = _.cloneDeep(work)
         defineWorkoutProps(copiedWorkout);
         workout.value = copiedWorkout;
@@ -343,11 +346,12 @@ export default function useWorkout(page = null) {
         await axios.post('/api/workouts', workout.value)
             .then(async response => {
                 await getWorkouts();
-                await useRouter().push({name: 'workouts.index'})
             })
             .catch(error => {
 
             })
+
+        await router.push({name: 'workouts.index'})
     }
 
     return {

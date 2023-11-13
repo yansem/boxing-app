@@ -174,7 +174,7 @@
 import InputNumber from "@/components/Form/InputNumber.vue";
 import InputCheckbox from "@/components/Form/InputCheckbox.vue";
 import useWorkout from "@/composables/workout.js";
-import {onBeforeMount, onMounted} from "vue";
+import {onMounted} from "vue";
 import {useRoute} from "vue-router";
 
 const {
@@ -183,14 +183,10 @@ const {
     workouts,
     punches,
     init,
-    getVoices,
-    getWorkouts,
     start,
     addRound,
     removeRound,
     changeMode,
-    changeWorkout,
-    workoutAdd
 } = useWorkout(useRoute().name);
 
 onMounted(async () => {

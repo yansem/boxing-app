@@ -17,27 +17,17 @@
 </template>
 
 <script setup>
-import InputNumber from "@/components/Form/InputNumber.vue";
-import InputCheckbox from "@/components/Form/InputCheckbox.vue";
 import useWorkout from "@/composables/workout.js";
-import {onBeforeMount, onMounted, ref} from "vue";
-import {useRoute} from "vue-router";
+import {onBeforeMount, ref} from "vue";
 
 const {
-    voices,
     workout,
     workouts,
-    punches,
     init,
-    getVoices,
     getWorkouts,
     start,
-    addRound,
-    removeRound,
-    changeMode,
     changeWorkout,
-    workoutAdd,
-    sleep
+
 } = useWorkout();
 
 const isLoading = ref(true);

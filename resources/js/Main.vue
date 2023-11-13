@@ -175,12 +175,10 @@ const {
     workout,
     punches,
     init,
-    getVoices,
     start,
     addRound,
     removeRound,
     changeMode,
-    getWorkouts
 } = useWorkout(useRoute().name);
 
 onBeforeMount(async () => {
