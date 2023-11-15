@@ -1,4 +1,4 @@
-import {computed, ref, watch} from "vue";
+import {computed, reactive, ref, watch} from "vue";
 import _ from "lodash";
 import {useRoute, useRouter} from "vue-router";
 
@@ -9,6 +9,9 @@ const punches = [1, 2, 3, 4, 5, 6, 7, 8];
 const workout = ref({});
 const workouts = ref([]);
 const isWorkoutEdit = ref(false);
+const isWorkoutStart = ref(false);
+const timer = ref('');
+let timerInterval;
 
 const simpleMode = {
     roundCount: 3,
@@ -100,6 +103,15 @@ const debug = (msg = 'debug') => {
     }, 1000);
 }
 
+const timerCount = (ms) => {
+    let s = ms / 1000;
+    timer.value = s;
+    return setInterval(() => {
+        s--;
+        timer.value = s;
+    }, 1000);
+}
+
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const playAudio = (audio) => {
@@ -109,13 +121,13 @@ const playAudio = (audio) => {
     })
 }
 
-const playRandomPunch = async (roundChecked = null) => {
+const playRandomPunch = (roundChecked = null) => {
     if (roundChecked) {
         const punchIndex = Math.floor(Math.random() * roundChecked.length);
         speakText(roundChecked[punchIndex]);
     } else {
         const punchIndex = Math.floor(Math.random() * workout.value.params.checked.length);
-        await speakText(workout.value.params.checked[punchIndex]);
+        speakText(workout.value.params.checked[punchIndex]);
     }
 }
 
@@ -262,16 +274,19 @@ export default function useWorkout(page = null) {
     };
 
     const start = async () => {
+        isWorkoutStart.value = true;
         let debugPrepare = debug('prepare');
+        timerInterval = timerCount(workout.value.prepareTimeMs)
         await sleep(workout.value.prepareTimeMs);
         clearInterval(debugPrepare);
+        clearInterval(timerInterval);
         if (!workout.value.isExpand) {
             for (let round = 0; round < workout.value.params.roundCount; round++) {
+                const debugRound = debug('round');
+                timerInterval = timerCount(workout.value.params.roundTimeMs)
 
                 const start = Date.now();
                 const end = start + workout.value.params.roundTimeMs;
-
-                const debugRound = debug('round');
 
                 await playAudio(bell);
 
@@ -283,23 +298,27 @@ export default function useWorkout(page = null) {
                         p = 0;
                         await calcSleep(end, workout.value.params.restBetweenPunchMs)
                     } else {
-                        await calcSleep(end, 100)
+                        await calcSleep(end, 1000)
                     }
                 }
 
                 clearInterval(debugRound);
+                clearInterval(timerInterval);
 
                 playAudio(bell);
 
                 if (round < workout.value.params.roundCount - 1) {
                     const debugRest = debug('rest');
+                    timerInterval = timerCount(workout.value.params.restBetweenRoundsMs)
                     await sleep(workout.value.params.restBetweenRoundsMs);
                     clearInterval(debugRest);
+                    clearInterval(timerInterval);
                 }
             }
         } else {
             for (let round = 0; round < workout.value.params.length; round++) {
                 const debugRound = debug('round');
+                timerInterval = timerCount(workout.value.params[round].roundTimeMs)
 
                 const start = Date.now();
                 const end = start + workout.value.params[round].roundTimeMs;
@@ -319,16 +338,20 @@ export default function useWorkout(page = null) {
                 }
 
                 clearInterval(debugRound);
+                clearInterval(timerInterval);
 
                 playAudio(bell);
 
                 if (round < workout.value.params.length - 1) {
                     const debugRest = debug('rest');
+                    timerInterval = timerCount(workout.value.params[round].restBetweenRoundsMs)
                     await sleep(workout.value.params[round].restBetweenRoundsMs);
                     clearInterval(debugRest);
+                    clearInterval(timerInterval);
                 }
             }
         }
+        isWorkoutStart.value = false;
     };
 
     const addRound = (index, order = '') => {
@@ -384,6 +407,8 @@ export default function useWorkout(page = null) {
         workouts,
         punches,
         isWorkoutEdit,
+        isWorkoutStart,
+        timer,
         init,
         getWorkouts,
         getVoices,

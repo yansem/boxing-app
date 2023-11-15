@@ -1,11 +1,14 @@
 <template>
-    <div class="flex justify-center">
-        <general-form/>
-    </div>
-    <hr class="w-full mb-2">
-    <template v-if="workout.params">
+    <template v-if="!isWorkoutStart">
+        <div class="flex justify-center">
+            <general-form/>
+        </div>
+        <hr class="w-full mb-2">
         <simple-mode v-if="!workout.isExpand"/>
         <expand-mode v-else/>
+    </template>
+    <template v-else>
+        {{ timer }}
     </template>
 </template>
 
@@ -19,6 +22,8 @@ import ExpandMode from "@/components/ExpandMode.vue";
 
 const {
     workout,
+    isWorkoutStart,
+    timer,
     init,
     start,
 } = useWorkout(useRoute().name);
