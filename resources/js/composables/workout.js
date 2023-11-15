@@ -206,6 +206,7 @@ export default function useWorkout(page = null) {
     const route = useRoute();
     const init = async () => {
         workout.value = {
+            title: 'Пробная тренировка',
             voiceSelected: 'Microsoft Irina - Russian (Russia)',
             isExpand: false,
             prepareTimeS: 3,
