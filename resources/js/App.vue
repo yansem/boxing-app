@@ -24,7 +24,13 @@
                     </div>
                 </div>
             </header>
-            <router-view></router-view>
+            <template v-if="isAuth">
+                <router-view v-if="workouts.length > 0"></router-view>
+            </template>
+            <template v-else>
+                <router-view></router-view>
+            </template>
+
         </template>
         <div v-if="isShowLogin" class="fixed inset-0 flex items-center justify-center">
             <div class="modal-bg absolute inset-0 bg-black opacity-50"></div>
@@ -95,7 +101,7 @@ import useAuth from '@/composables/auth';
 import {ref, onBeforeMount} from "vue";
 import useWorkout from "@/composables/workout.js";
 
-const {getVoices, getWorkouts} = useWorkout();
+const {workouts, getVoices, getWorkouts} = useWorkout();
 
 const {
     user,

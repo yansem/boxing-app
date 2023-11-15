@@ -5,10 +5,13 @@
                 тренировку
             </router-link>
             <ul>
-                <li v-for="work in workouts" class="mb-2">
+                <li v-for="(work, index) in workouts" :key="index" class="mb-2 flex justify-between" @mouseover="setHoveredItem(index)" @mouseout="setHoveredItem(null)">
                     <router-link :to="{name: 'workouts.show', params: {id: work.id}}"
                                  class="text-white hover:text-yellow-400">{{ work.title }}
                     </router-link>
+                    <button v-show="hoveredItem === index" @click="workoutDelete" class="text-red-500">
+                        <TrashIcon class="h-5 w-5" />
+                    </button>
                 </li>
             </ul>
         </aside>
@@ -19,22 +22,28 @@
 </template>
 
 <script setup>
+import { TrashIcon } from '@heroicons/vue/24/outline';
 import useWorkout from "@/composables/workout.js";
-import {onBeforeMount, watch} from "vue";
-import {useRoute, useRouter} from "vue-router";
+import {onBeforeMount, ref, watch} from "vue";
+import {useRouter} from "vue-router";
 
 const router = useRouter();
-const route = useRoute();
+const hoveredItem = ref(null);
 
-const {workouts} = useWorkout();
+const {workouts, workoutDelete} = useWorkout();
+
+const setHoveredItem = (index) => {
+    hoveredItem.value = index;
+}
 
 onBeforeMount(async () => {
     await router.push({name: 'workouts.show', params: {id: workouts.value[workouts.value.length - 1].id}})
 })
 
 watch(() => router.currentRoute.value.name, (newName, oldName) => {
-    if (newName !== oldName)
-        router.push({name: 'workouts.show', params: {id: workouts.value[workouts.value.length - 1].id}})
+    if (router.currentRoute.value.name === 'workouts.show' || router.currentRoute.value.name === 'workouts')
+        if (newName !== oldName)
+            router.push({name: 'workouts.show', params: {id: workouts.value[workouts.value.length - 1].id}})
 })
 
 </script>

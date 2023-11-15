@@ -29,4 +29,25 @@ class WorkoutController extends Controller
 
         return response()->json(['message' => 'Workout created'], Response::HTTP_CREATED);
     }
+
+    public function update(WorkoutRequest $request, $id): JsonResponse
+    {
+        $data = $request->validated();
+        $workout = Workout::findOrFail($id);
+        $data = [
+            'user_id' => $request->user()->id,
+            'params' => $data,
+        ];
+        $workout->update($data);
+
+        return response()->json(['message' => 'Workout updated'], Response::HTTP_OK);
+    }
+
+    public function destroy($id): JsonResponse
+    {
+        $workout = Workout::findOrFail($id);
+        $workout->delete();
+
+        return response()->json(['message' => 'Workout deleted'], Response::HTTP_OK);
+    }
 }

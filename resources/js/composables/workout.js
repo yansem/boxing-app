@@ -1,4 +1,4 @@
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import _ from "lodash";
 import {useRoute, useRouter} from "vue-router";
 
@@ -8,7 +8,7 @@ const voices = ref([]);
 const punches = [1, 2, 3, 4, 5, 6, 7, 8];
 const workout = ref({});
 const workouts = ref([]);
-const workoutsIsLoaded = ref(false);
+const isWorkoutEdit = ref(false);
 
 const simpleMode = {
     roundCount: 3,
@@ -219,9 +219,16 @@ export default function useWorkout(page = null) {
 
         if (page === 'workouts.show') {
             if (workouts.value.length > 0) {
+                isWorkoutEdit.value = false;
                 const copiedWorkout = _.cloneDeep(workouts.value.find(work => work.id == route.params.id));
                 defineWorkoutProps(copiedWorkout);
                 workout.value = copiedWorkout;
+                watch(workout.value, (newVal, oldVal) => {
+                        if (newVal && oldVal) {
+                            isWorkoutEdit.value = true
+                        }
+                    },
+                    {deep: true, immediate: true})
             }
         } else if (page === 'workouts.create') {
             workout.value.title = workouts.value.length > 0
@@ -234,7 +241,6 @@ export default function useWorkout(page = null) {
         await axios.get('/api/workouts')
             .then(response => {
                 workouts.value = response.data.data
-                workoutsIsLoaded.value = true
             })
             .catch(error => {
 
@@ -347,6 +353,28 @@ export default function useWorkout(page = null) {
             })
 
         await router.push({name: 'workouts.show', params: {id: workouts.value[workouts.value.length - 1].id}})
+    };
+
+    const workoutUpdate = async () => {
+        await axios.patch(`/api/workouts/${workout.value.id}`, workout.value)
+            .then(async response => {
+                await getWorkouts();
+            })
+            .catch(error => {
+
+            })
+        isWorkoutEdit.value = false;
+    }
+
+    const workoutDelete = async () => {
+        await axios.delete(`/api/workouts/${workout.value.id}`)
+            .then(async response => {
+                await getWorkouts();
+                await router.push({name: 'workouts.show', params: {id: workouts.value[workouts.value.length - 1].id}})
+            })
+            .catch(error => {
+
+            })
     }
 
     return {
@@ -354,7 +382,7 @@ export default function useWorkout(page = null) {
         workout,
         workouts,
         punches,
-        workoutsIsLoaded,
+        isWorkoutEdit,
         init,
         getWorkouts,
         getVoices,
@@ -362,6 +390,8 @@ export default function useWorkout(page = null) {
         addRound,
         removeRound,
         changeMode,
-        workoutStore
+        workoutStore,
+        workoutUpdate,
+        workoutDelete
     }
 }

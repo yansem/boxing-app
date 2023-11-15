@@ -3,7 +3,6 @@ import Workouts from "@/pages/Workouts/Workouts.vue";
 import Main from "@/Main.vue";
 import Create from "@/pages/Workouts/Create.vue";
 import Show from "@/pages/Workouts/Show.vue";
-import useWorkout from "@/composables/workout.js";
 
 
 function auth(to, from, next) {
