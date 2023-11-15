@@ -17,36 +17,29 @@
                                 <button class="bg-yellow-400 py-2 px-4 rounded" @click="logout">Выйти</button>
                             </template>
                             <template v-else>
-                                <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowLogin = true">Войти</button>
-                                <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowRegister = true">Регистрация</button>
+                                <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowLogin = true">Войти
+                                </button>
+                                <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowRegister = true">
+                                    Регистрация
+                                </button>
                             </template>
                         </div>
                     </div>
                 </div>
             </header>
-            <template v-if="isAuth">
-                <router-view v-if="workouts.length > 0"></router-view>
-            </template>
-            <template v-else>
-                <router-view></router-view>
-            </template>
-
+            <router-view></router-view>
         </template>
         <div v-if="isShowLogin" class="fixed inset-0 flex items-center justify-center">
             <div class="modal-bg absolute inset-0 bg-black opacity-50"></div>
             <div class="modal-content bg-white p-4 rounded-lg relative">
-                <!-- Close button -->
-                <button id="closeModal"
-                        class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
+                <button @click="isShowLogin = false" class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
                               d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414z"/>
                     </svg>
                 </button>
-                <!-- Modal content, including form -->
                 <h1 class="text-2xl font-semibold">Вход</h1>
                 <form @submit.prevent="submitLogin" class="mt-4">
-                    <!-- Form inputs go here -->
                     <div class="mb-4">
                         <label for="login" class="block font-medium text-gray-700">Логин</label>
                         <input v-model="loginForm.login" type="text" id="login" name="login"
@@ -57,7 +50,6 @@
                         <input v-model="loginForm.password" type="password" id="password" name="password"
                                class="w-full p-2 border rounded-lg">
                     </div>
-                    <!-- Add more form fields as needed -->
                     <button class="bg-yellow-400 py-2 px-4 rounded">Ок</button>
                 </form>
             </div>
@@ -66,17 +58,14 @@
         <div v-if="isShowRegister" class="fixed inset-0 flex items-center justify-center">
             <div class="modal-bg absolute inset-0 bg-black opacity-50"></div>
             <div class="modal-content bg-white p-4 rounded-lg relative">
-                <!-- Close button -->
-                <button class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
+                <button @click="isShowRegister = false" class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
                               d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414z"/>
                     </svg>
                 </button>
-                <!-- Modal content, including form -->
                 <h1 class="text-2xl font-semibold">Регистрация</h1>
                 <form @submit.prevent="registration" class="mt-4">
-                    <!-- Form inputs go here -->
                     <div class="mb-4">
                         <label for="login" class="block font-medium text-gray-700">Логин</label>
                         <input v-model="registerForm.login" type="text" id="login" name="login"
@@ -87,7 +76,6 @@
                         <input v-model="registerForm.password" type="password" id="password" name="password"
                                class="w-full p-2 border rounded-lg">
                     </div>
-                    <!-- Add more form fields as needed -->
                     <button class="bg-yellow-400 py-2 px-4 rounded">Ок</button>
                 </form>
             </div>

@@ -9,7 +9,7 @@ function auth(to, from, next) {
     if (JSON.parse(localStorage.getItem('loggedIn'))) {
         next()
     } else {
-        next()
+        next({name: 'main'})
     }
 }
 
@@ -26,6 +26,7 @@ const routes = [
                 path: 'workouts',
                 component: Workouts,
                 name: 'workouts',
+                beforeEnter: auth,
                 children: [
                     {
                         path: ':id',

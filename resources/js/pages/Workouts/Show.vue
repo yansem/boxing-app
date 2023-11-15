@@ -1,5 +1,4 @@
 <template>
-    <template v-if="workouts.length > 0">
         <table class="border-collapse border border-slate-400">
             <tbody>
             <tr>
@@ -165,10 +164,6 @@
             </table>
         </template>
         <button class="bg-yellow-400 py-2 px-4 rounded" v-if="isWorkoutEdit" @click="workoutUpdate">Сохранить</button>
-    </template>
-    <template v-else>
-        Тренировок пока нет...
-    </template>
 </template>
 
 <script setup>
