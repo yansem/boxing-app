@@ -9,9 +9,10 @@
                 </td>
             </tr>
             <tr>
-                <td class="border border-slate-300">Время раунда</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="workout.params.roundTimeS" :id="'round-time'"/>
+                <td class="border border-slate-300">Время раунда, м:с</td>
+                <td class="border border-slate-300 flex justify-center">
+                    <input-number v-model="workout.params.roundTimeM" :id="'round-time-m'"/>:
+                    <input-number v-model="workout.params.roundTimeS" :id="'round-time-s'"/>
                 </td>
             </tr>
             <tr>
@@ -35,15 +36,17 @@
                 </td>
             </tr>
             <tr>
-                <td class="border border-slate-300">Интервал между ударами</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="workout.params.restBetweenPunchS" :id="'rest-between-punch'"/>
+                <td class="border border-slate-300">Интервал между ударами, м:с</td>
+                <td class="border border-slate-300 flex justify-center">
+                    <input-number v-model="workout.params.restBetweenPunchM" :id="'rest-between-punch-m'"/>:
+                    <input-number v-model="workout.params.restBetweenPunchS" :id="'rest-between-punch-s'"/>
                 </td>
             </tr>
             <tr>
-                <td class="border border-slate-300">Отдых между раундами</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="workout.params.restBetweenRoundsS" :id="'rest-between-round'"/>
+                <td class="border border-slate-300">Отдых между раундами, м:с</td>
+                <td class="border border-slate-300 flex justify-center">
+                    <input-number v-model="workout.params.restBetweenRoundsM" :id="'rest-between-round-m'"/>:
+                    <input-number v-model="workout.params.restBetweenRoundsS" :id="'rest-between-round-s'"/>
                 </td>
             </tr>
             </tbody>

@@ -10,8 +10,9 @@
             </tr>
             <tr>
                 <td class="border border-slate-300">Время раунда</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.roundTimeS" :id="'round-time' + index"/>
+                <td class="border border-slate-300 flex justify-center">
+                    <input-number v-model="round.roundTimeM" :id="'round-time-m' + index"/>:
+                    <input-number v-model="round.roundTimeS" :id="'round-time-s' + index"/>
                 </td>
             </tr>
             <tr>
@@ -36,14 +37,16 @@
             </tr>
             <tr>
                 <td class="border border-slate-300">Интервал между ударами</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.restBetweenPunchS" :id="'rest-between-punch' + index"/>
+                <td class="border border-slate-300 flex justify-center">
+                    <input-number v-model="round.restBetweenPunchM" :id="'rest-between-punch-m' + index"/>:
+                    <input-number v-model="round.restBetweenPunchS" :id="'rest-between-punch-s' + index"/>
                 </td>
             </tr>
             <tr>
                 <td class="border border-slate-300">Отдых после раунда</td>
-                <td class="border border-slate-300">
-                    <input-number v-model="round.restBetweenRoundsS" :id="'rest-between-round' + index"/>
+                <td class="border border-slate-300 flex justify-center">
+                    <input-number v-model="round.restBetweenRoundsM" :id="'rest-between-round-m' + index"/>:
+                    <input-number v-model="round.restBetweenRoundsS" :id="'rest-between-round-s' + index"/>
                 </td>
             </tr>
             <tr>

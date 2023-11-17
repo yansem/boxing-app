@@ -11,13 +11,18 @@ const workouts = ref([]);
 const isWorkoutEdit = ref(false);
 const isWorkoutStart = ref(false);
 const timer = ref('');
+const roundCount = ref('');
 let timerInterval;
+const isPrepare = ref(false);
+const isWork = ref(false);
+const isRest = ref(false);
 
 const simpleMode = {
     roundCount: 3,
+    roundTimeM: 0,
     roundTimeS: 20,
     get roundTimeMs() {
-        return this.roundTimeS * 1000;
+        return (this.roundTimeM * 60 + this.roundTimeS) * 1000;
     },
     punchCount: 3,
     checked: [1, 2, 3, 4, 5, 6, 7, 8],
@@ -27,29 +32,34 @@ const simpleMode = {
     set selectAll(value) {
         this.checked = value ? [...punches] : [];
     },
+    restBetweenPunchM: 0,
     restBetweenPunchS: 3,
     get restBetweenPunchMs() {
-        return this.restBetweenPunchS * 1000;
+        return (this.restBetweenPunchM * 60 + this.restBetweenPunchS) * 1000;
     },
+    restBetweenRoundsM: 0,
     restBetweenRoundsS: 10,
     get restBetweenRoundsMs() {
-        return this.restBetweenRoundsS * 1000;
+        return (this.restBetweenRoundsM * 60 + this.restBetweenRoundsS) * 1000;
     }
 };
 
 const expandMode = {
+    roundTimeM: 0,
     roundTimeS: 20,
     get roundTimeMs() {
-        return this.roundTimeS * 1000;
+        return (this.roundTimeM * 60 + this.roundTimeS) * 1000;
     },
     punchCount: 3,
+    restBetweenPunchM: 0,
     restBetweenPunchS: 3,
     get restBetweenPunchMs() {
-        return this.restBetweenPunchS * 1000;
+        return (this.restBetweenPunchM * 60 + this.restBetweenPunchS) * 1000;
     },
+    restBetweenRoundsM: 0,
     restBetweenRoundsS: 10,
     get restBetweenRoundsMs() {
-        return this.restBetweenRoundsS * 1000;
+        return (this.restBetweenRoundsM * 60 + this.restBetweenRoundsS) * 1000;
     },
     checked: [1, 2, 3, 4, 5, 6, 7, 8],
     get selectAll() {
@@ -67,15 +77,18 @@ const copyObject = (obj) => {
 const defineTotalTimeProp = (workout) => {
     workout.totalTime = computed(() => {
         if (!workout.isExpand) {
-            return workout.params.roundCount * workout.params.roundTimeS + (workout.params.roundCount - 1) * workout.params.restBetweenRoundsS;
+            const totalS = (workout.prepareTimeM * 60 + parseInt(workout.prepareTimeS))
+                + (workout.params.roundCount * (workout.params.roundTimeM * 60 + workout.params.roundTimeS))
+                + ((workout.params.roundCount - 1) * (workout.params.restBetweenRoundsM * 60 + workout.params.restBetweenRoundsS));
+            return formatTime(totalS);
         } else {
-            let total = 0;
+            let totalS = workout.prepareTimeM * 60 + parseInt(workout.prepareTimeS);
             workout.params.forEach(round => {
-                total += parseInt(round.roundTimeS) + parseInt(round.restBetweenRoundsS);
+                totalS += (round.roundTimeM * 60 + parseInt(round.roundTimeS)) + (round.restBetweenRoundsM * 60 + parseInt(round.restBetweenRoundsS));
             })
-            total -= workout.params[workout.params.length - 1].restBetweenRoundsS;
+            totalS -= workout.params[workout.params.length - 1].restBetweenRoundsS;
 
-            return isNaN(total) ? 0 : total;
+            return formatTime(totalS);
         }
     });
 }
@@ -105,14 +118,26 @@ const debug = (msg = 'debug') => {
 
 const timerCount = (ms) => {
     let s = ms / 1000;
-    timer.value = s;
+    timer.value = formatTime(s);
     return setInterval(() => {
         s--;
-        timer.value = s;
+        timer.value = formatTime(s);
     }, 1000);
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+function formatTime(seconds) {
+    let h = Math.floor(seconds / 3600);
+    let m = Math.floor((seconds % 3600) / 60);
+    let s = seconds % 60;
+
+    return `${padZero(h)}:${padZero(m)}:${padZero(s)}`;
+}
+
+function padZero(value) {
+    return value < 10 ? `0${value}` : value;
+}
 
 const playAudio = (audio) => {
     return new Promise(resolve => {
@@ -145,7 +170,7 @@ const defineWorkoutProps = (workout) => {
             {
                 prepareTimeMs: {
                     get: function () {
-                        return workout.prepareTimeS * 1000;
+                        return (workout.prepareTimeM * 60 + workout.prepareTimeS) * 1000;
                     }
                 }
             }
@@ -155,17 +180,17 @@ const defineWorkoutProps = (workout) => {
                 {
                     roundTimeMs: {
                         get: function () {
-                            return workout.params.roundTimeS * 1000;
+                            return (workout.params.roundTimeM * 60 + workout.params.roundTimeS) * 1000;
                         }
                     },
                     restBetweenPunchMs: {
                         get: function () {
-                            return workout.params.restBetweenPunchS * 1000;
+                            return (workout.params.restBetweenPunchM * 60 +workout.params.restBetweenPunchS) * 1000;
                         }
                     },
                     restBetweenRoundsMs: {
                         get: function () {
-                            return workout.params.restBetweenRoundsS * 1000;
+                            return (workout.params.restBetweenRoundsM * 60 +workout.params.restBetweenRoundsS) * 1000;
                         }
                     },
                     selectAll: {
@@ -184,17 +209,17 @@ const defineWorkoutProps = (workout) => {
                     {
                         roundTimeMs: {
                             get: function () {
-                                return round.roundTimeS * 1000;
+                                return (round.roundTimeM * 60 + round.roundTimeS) * 1000;
                             }
                         },
                         restBetweenPunchMs: {
                             get: function () {
-                                return round.restBetweenPunchS * 1000;
+                                 return (round.restBetweenPunchM * 60 + round.restBetweenPunchS) * 1000;
                             }
                         },
                         restBetweenRoundsMs: {
                             get: function () {
-                                return round.restBetweenRoundsS * 1000;
+                                 return (round.restBetweenRoundsM * 60 + round.restBetweenRoundsS) * 1000;
                             }
                         },
                         selectAll: {
@@ -221,20 +246,20 @@ export default function useWorkout(page = null) {
             title: 'Пробная тренировка',
             voiceSelected: 'Microsoft Irina - Russian (Russia)',
             isExpand: false,
+            prepareTimeM: 0,
             prepareTimeS: 3,
             get prepareTimeMs() {
-                return this.prepareTimeS * 1000;
+                return (this.prepareTimeM * 60 + this.prepareTimeS) * 1000;
             },
             params: copyObject(simpleMode),
         };
-        defineTotalTimeProp(workout.value);
-
+        await defineTotalTimeProp(workout.value);
 
         if (page === 'workouts.show') {
             if (workouts.value.length > 0) {
                 isWorkoutEdit.value = false;
-                const copiedWorkout = _.cloneDeep(workouts.value.find(work => work.id == route.params.id));
-                defineWorkoutProps(copiedWorkout);
+                const copiedWorkout = await _.cloneDeep(workouts.value.find(work => work.id == route.params.id));
+                await defineWorkoutProps(copiedWorkout);
                 workout.value = copiedWorkout;
                 watch(workout.value, (newVal, oldVal) => {
                         if (newVal && oldVal) {
@@ -248,6 +273,7 @@ export default function useWorkout(page = null) {
                 ? 'Новая тренировка ' + (workouts.value.length + 1)
                 : 'Новая тренировка 1'
         }
+        console.log(workout.value);
     };
 
     const getWorkouts = async () => {
@@ -275,15 +301,20 @@ export default function useWorkout(page = null) {
 
     const start = async () => {
         isWorkoutStart.value = true;
+        roundCount.value = `1/${workout.value.params.roundCount || workout.value.params.length}`;
         let debugPrepare = debug('prepare');
         timerInterval = timerCount(workout.value.prepareTimeMs)
+        isPrepare.value = !isPrepare.value;
         await sleep(workout.value.prepareTimeMs);
+        isPrepare.value = !isPrepare.value;
         clearInterval(debugPrepare);
         clearInterval(timerInterval);
         if (!workout.value.isExpand) {
             for (let round = 0; round < workout.value.params.roundCount; round++) {
+                roundCount.value = `${round + 1}/${workout.value.params.roundCount}`;
                 const debugRound = debug('round');
-                timerInterval = timerCount(workout.value.params.roundTimeMs)
+                timerInterval = timerCount(workout.value.params.roundTimeMs);
+                isWork.value = !isWork.value;
 
                 const start = Date.now();
                 const end = start + workout.value.params.roundTimeMs;
@@ -304,21 +335,26 @@ export default function useWorkout(page = null) {
 
                 clearInterval(debugRound);
                 clearInterval(timerInterval);
+                isWork.value = !isWork.value;
 
                 playAudio(bell);
 
                 if (round < workout.value.params.roundCount - 1) {
                     const debugRest = debug('rest');
                     timerInterval = timerCount(workout.value.params.restBetweenRoundsMs)
+                    isRest.value = !isRest.value;
                     await sleep(workout.value.params.restBetweenRoundsMs);
+                    isRest.value = !isRest.value;
                     clearInterval(debugRest);
                     clearInterval(timerInterval);
                 }
             }
         } else {
             for (let round = 0; round < workout.value.params.length; round++) {
+                roundCount.value = `${round + 1}/${workout.value.params.length}`;
                 const debugRound = debug('round');
                 timerInterval = timerCount(workout.value.params[round].roundTimeMs)
+                isWork.value = !isWork.value;
 
                 const start = Date.now();
                 const end = start + workout.value.params[round].roundTimeMs;
@@ -339,13 +375,16 @@ export default function useWorkout(page = null) {
 
                 clearInterval(debugRound);
                 clearInterval(timerInterval);
+                isWork.value = !isWork.value;
 
                 playAudio(bell);
 
                 if (round < workout.value.params.length - 1) {
                     const debugRest = debug('rest');
                     timerInterval = timerCount(workout.value.params[round].restBetweenRoundsMs)
+                    isRest.value = !isRest.value;
                     await sleep(workout.value.params[round].restBetweenRoundsMs);
+                    isRest.value = !isRest.value;
                     clearInterval(debugRest);
                     clearInterval(timerInterval);
                 }
@@ -409,6 +448,10 @@ export default function useWorkout(page = null) {
         isWorkoutEdit,
         isWorkoutStart,
         timer,
+        roundCount,
+        isPrepare,
+        isWork,
+        isRest,
         init,
         getWorkouts,
         getVoices,

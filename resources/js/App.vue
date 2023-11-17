@@ -27,12 +27,15 @@
                     </div>
                 </div>
             </header>
-            <router-view></router-view>
+            <div class="h-screen" :class="{'bg-green-600': isPrepare, 'bg-red-600': isWork, 'bg-blue-500': isRest}">
+                <router-view></router-view>
+            </div>
         </template>
         <div v-if="isShowLogin" class="fixed inset-0 flex items-center justify-center">
             <div class="modal-bg absolute inset-0 bg-black opacity-50"></div>
             <div class="modal-content bg-white p-4 rounded-lg relative">
-                <button @click="isShowLogin = false" class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
+                <button @click="isShowLogin = false"
+                        class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
                               d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414z"/>
@@ -58,7 +61,8 @@
         <div v-if="isShowRegister" class="fixed inset-0 flex items-center justify-center">
             <div class="modal-bg absolute inset-0 bg-black opacity-50"></div>
             <div class="modal-content bg-white p-4 rounded-lg relative">
-                <button @click="isShowRegister = false" class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
+                <button @click="isShowRegister = false"
+                        class="absolute top-0 right-0 p-2 cursor-pointer text-gray-600 hover:text-gray-800">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
                               d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 111.414 1.414L11.414 10l2.293 2.293a1 1 0 01-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414z"/>
@@ -89,7 +93,14 @@ import useAuth from '@/composables/auth';
 import {ref, onBeforeMount} from "vue";
 import useWorkout from "@/composables/workout.js";
 
-const {workouts, getVoices, getWorkouts} = useWorkout();
+const {
+    workouts,
+    isPrepare,
+    isWork,
+    isRest,
+    getVoices,
+    getWorkouts
+} = useWorkout();
 
 const {
     user,

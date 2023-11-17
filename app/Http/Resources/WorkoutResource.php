@@ -19,6 +19,7 @@ class WorkoutResource extends JsonResource
             'title' => $this->params['title'],
             'isExpand' => $this->params['isExpand'],
             'voiceSelected' => $this->params['voiceSelected'],
+            'prepareTimeM' => $this->params['prepareTimeM'],
             'prepareTimeS' => $this->params['prepareTimeS'],
             'totalTime' => $this->params['totalTime'],
             'params' => $this->params['params']

@@ -14,9 +14,10 @@
             </td>
         </tr>
         <tr>
-            <td class="border border-slate-300">Время подготовки</td>
-            <td class="border border-slate-300">
-                <input-number v-model="workout.prepareTimeS" :id="'prepare-time'"/>
+            <td class="border border-slate-300">Время подготовки, м:с</td>
+            <td class="border border-slate-300 flex justify-center">
+                <input-number v-model="workout.prepareTimeM" :id="'prepare-time-m'"/>:
+                <input-number v-model="workout.prepareTimeS" :id="'prepare-time-s'"/>
             </td>
         </tr>
         <tr>

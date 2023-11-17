@@ -22,7 +22,10 @@
             </template>
         </aside>
         <div class="flex flex-col items-center flex-grow">
-                <router-view></router-view>
+            <template v-if="currentRouteName === 'workouts.show'">
+                <router-view v-if="workouts.length > 0"/>
+            </template>
+            <router-view v-else/>
         </div>
     </div>
 </template>
@@ -30,7 +33,7 @@
 <script setup>
 import {TrashIcon} from '@heroicons/vue/24/outline';
 import useWorkout from "@/composables/workout.js";
-import {onBeforeMount, ref, watch} from "vue";
+import {onBeforeMount, onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 
 const router = useRouter();
@@ -42,14 +45,16 @@ const setHoveredItem = (index) => {
     hoveredItem.value = index;
 }
 
+const currentRouteName = ref(router.currentRoute.value.name);
+
 onBeforeMount(async () => {
     if (workouts.value.length > 0)
         await router.push({name: 'workouts.show', params: {id: workouts.value[workouts.value.length - 1].id}})
-})
+});
 
-watch(() => router.currentRoute.value.name, (newName, oldName) => {
+watch(() => currentRouteName, (newName, oldName) => {
     if (workouts.value.length > 0
-        && (router.currentRoute.value.name === 'workouts.show' || router.currentRoute.value.name === 'workouts')
+        && (currentRouteName.value === 'workouts.show' || currentRouteName.value === 'workouts')
         && (newName !== oldName))
         router.push({name: 'workouts.show', params: {id: workouts.value[workouts.value.length - 1].id}})
 })
