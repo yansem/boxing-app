@@ -90,7 +90,7 @@
 <script setup>
 import useAuth from '@/composables/auth';
 
-import {ref, onBeforeMount} from "vue";
+import {ref, onBeforeMount, onUpdated} from "vue";
 import useWorkout from "@/composables/workout.js";
 
 const {

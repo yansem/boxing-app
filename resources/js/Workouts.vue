@@ -200,8 +200,8 @@ const {
 } = useWorkout();
 
 onMounted(async () => {
-    init();
-    getVoices();
+    await init();
+    await getVoices();
     await getWorkouts();
 })
 

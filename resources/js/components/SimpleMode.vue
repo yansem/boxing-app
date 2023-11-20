@@ -60,7 +60,7 @@ import InputNumber from "@/components/Form/InputNumber.vue";
 import InputCheckbox from "@/components/Form/InputCheckbox.vue";
 import useWorkout from "@/composables/workout.js";
 
-const {workout, punches} = useWorkout()
+const {workout, punches} = useWorkout();
 </script>
 
 <style scoped>

@@ -1,4 +1,5 @@
 <template>
+    <div v-if="isInitEnd">
         <template v-if="!isWorkoutStart">
             <div class="flex justify-center">
                 <general-form/>
@@ -10,17 +11,17 @@
         <template v-else>
             <workout-timer :round-count="roundCount" :timer="timer"/>
         </template>
+    </div>
 </template>
 
 <script setup>
 import useWorkout from "@/composables/workout.js";
-import {onBeforeMount} from "vue";
+import {onBeforeMount, ref} from "vue";
 import {useRoute} from "vue-router";
 import GeneralForm from "@/components/GeneralForm.vue";
 import SimpleMode from "@/components/SimpleMode.vue";
 import ExpandMode from "@/components/ExpandMode.vue";
 import WorkoutTimer from "@/components/WorkoutTimer.vue";
-import {round} from "lodash";
 
 const {
     workout,
@@ -31,8 +32,11 @@ const {
     start,
 } = useWorkout(useRoute().name);
 
+const isInitEnd = ref(false);
+
 onBeforeMount(async () => {
     await init();
-})
+    isInitEnd.value = true;
+});
 
 </script>
