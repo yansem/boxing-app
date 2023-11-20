@@ -13,9 +13,12 @@ const isWorkoutStart = ref(false);
 const timer = ref('');
 const roundCount = ref('');
 let timerInterval;
+let sleepTimeout;
+const sleepResolve = ref(null);
 const isPrepare = ref(false);
 const isWork = ref(false);
 const isRest = ref(false);
+const isPaused = ref(false);
 
 const defineWorkoutModeProps = (params) => {
     Object.defineProperties(params,
@@ -105,12 +108,31 @@ const timerCount = (ms) => {
     let s = ms / 1000;
     timer.value = formatTime(s);
     return setInterval(() => {
-        s--;
-        timer.value = formatTime(s);
+        if (!isPaused.value) {
+            s--;
+            timer.value = formatTime(s);
+        }
     }, 1000);
+    // return setInterval(() => {
+    //     s--;
+    //     timer.value = formatTime(s);
+    // }, 1000);
 }
 
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise(resolve => {
+    sleepResolve.value = resolve;
+    let count = 0;
+    const sleepInterval = setInterval(() => {
+        if (!isPaused.value) {
+            count++;
+        }
+        if (count === ms / 1000) {
+            clearInterval(sleepInterval);
+            resolve();
+        }
+    }, 1000);
+    // sleepTimeout = setTimeout(resolve, ms);
+});
 
 function formatTime(seconds) {
     let h = Math.floor(seconds / 3600);
@@ -267,6 +289,7 @@ export default function useWorkout(page = null) {
         isPrepare.value = !isPrepare.value;
         clearInterval(debugPrepare);
         clearInterval(timerInterval);
+        if (!isWorkoutStart.value) return;
         if (!workout.value.isExpand) {
             for (let round = 0; round < workout.value.params.roundCount; round++) {
                 roundCount.value = `${round + 1}/${workout.value.params.roundCount}`;
@@ -294,6 +317,7 @@ export default function useWorkout(page = null) {
                 clearInterval(debugRound);
                 clearInterval(timerInterval);
                 isWork.value = !isWork.value;
+                if (!isWorkoutStart.value) return;
 
                 playAudio(bell);
 
@@ -305,6 +329,7 @@ export default function useWorkout(page = null) {
                     isRest.value = !isRest.value;
                     clearInterval(debugRest);
                     clearInterval(timerInterval);
+                    if (!isWorkoutStart.value) return;
                 }
             }
         } else {
@@ -400,6 +425,12 @@ export default function useWorkout(page = null) {
             })
     }
 
+    const stop = () => {
+        isWorkoutStart.value = false;
+        sleepResolve.value();
+        clearTimeout(sleepTimeout);
+    }
+
     return {
         voices,
         workout,
@@ -412,6 +443,7 @@ export default function useWorkout(page = null) {
         isPrepare,
         isWork,
         isRest,
+        isPaused,
         init,
         getWorkouts,
         getVoices,
@@ -421,6 +453,7 @@ export default function useWorkout(page = null) {
         changeMode,
         workoutStore,
         workoutUpdate,
-        workoutDelete
+        workoutDelete,
+        stop
     }
 }
