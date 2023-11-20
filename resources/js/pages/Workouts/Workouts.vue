@@ -33,7 +33,7 @@
 <script setup>
 import {TrashIcon} from '@heroicons/vue/24/outline';
 import useWorkout from "@/composables/workout.js";
-import {onBeforeMount, onMounted, ref, watch} from "vue";
+import {onBeforeMount, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 
 const router = useRouter();
@@ -48,15 +48,15 @@ const setHoveredItem = (index) => {
 const currentRouteName = ref(router.currentRoute.value.name);
 
 onBeforeMount(async () => {
-    if (workouts.value.length > 0)
+    if (workouts.value.length > 0 && currentRouteName.value === 'workouts') {
         await router.push({name: 'workouts.show', params: {id: workouts.value[workouts.value.length - 1].id}})
+    }
 });
 
-watch(() => currentRouteName, (newName, oldName) => {
-    if (workouts.value.length > 0
-        && (currentRouteName.value === 'workouts.show' || currentRouteName.value === 'workouts')
-        && (newName !== oldName))
+watch(() => router.currentRoute.value.name, (newName, oldName) => {
+    if (workouts.value.length > 0 && router.currentRoute.value.name === 'workouts') {
         router.push({name: 'workouts.show', params: {id: workouts.value[workouts.value.length - 1].id}})
+    }
 })
 
 </script>

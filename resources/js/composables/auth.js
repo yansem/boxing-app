@@ -51,8 +51,8 @@ export default function useAuth(getWorkouts) {
 
     const getUser = async () => {
         await axios.get('/api/user')
-            .then(response => {
-                loginUser(response)
+            .then(async response => {
+                await loginUser(response)
             })
             .catch(error => {
 
