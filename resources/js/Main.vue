@@ -11,8 +11,8 @@
         <template v-else>
             <div class="flex flex-col">
                 <button @click="stop">STOP</button>
-                <button @click="isPaused = true">PAUSE</button>
-                <button @click="isPaused = false">RESUME</button>
+                <button @click="pause">PAUSE</button>
+                <button @click="resume">RESUME</button>
             </div>
             <workout-timer :round-count="roundCount" :timer="timer"/>
         </template>
@@ -33,8 +33,9 @@ const {
     isWorkoutStart,
     timer,
     roundCount,
-    isPaused,
     stop,
+    pause,
+    resume,
     init,
     start
 } = useWorkout(useRoute().name);

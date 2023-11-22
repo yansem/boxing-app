@@ -13,12 +13,17 @@ const isWorkoutStart = ref(false);
 const timer = ref('');
 const roundCount = ref('');
 let timerInterval;
-let sleepTimeout;
-const sleepResolve = ref(null);
 const isPrepare = ref(false);
 const isWork = ref(false);
 const isRest = ref(false);
 const isPaused = ref(false);
+let isResumed;
+
+let end;
+let p = 0;
+let r = 0;
+let s = 0;
+let currentStageTimer;
 
 const defineWorkoutModeProps = (params) => {
     Object.defineProperties(params,
@@ -53,12 +58,12 @@ const defineWorkoutModeProps = (params) => {
 const simpleMode = reactive({
     roundCount: 3,
     roundTimeM: 0,
-    roundTimeS: 20,
+    roundTimeS: 5,
     punchCount: 3,
     restBetweenPunchM: 0,
     restBetweenPunchS: 3,
     restBetweenRoundsM: 0,
-    restBetweenRoundsS: 10,
+    restBetweenRoundsS: 5,
     checked: [1, 2, 3, 4, 5, 6, 7, 8]
 });
 
@@ -105,7 +110,7 @@ const debug = (msg = 'debug') => {
 }
 
 const timerCount = (ms) => {
-    let s = ms / 1000;
+    s = ms / 1000;
     timer.value = formatTime(s);
     return setInterval(() => {
         if (!isPaused.value) {
@@ -113,25 +118,17 @@ const timerCount = (ms) => {
             timer.value = formatTime(s);
         }
     }, 1000);
-    // return setInterval(() => {
-    //     s--;
-    //     timer.value = formatTime(s);
-    // }, 1000);
 }
 
 const sleep = (ms) => new Promise(resolve => {
-    sleepResolve.value = resolve;
     let count = 0;
     const sleepInterval = setInterval(() => {
-        if (!isPaused.value) {
-            count++;
-        }
-        if (count === ms / 1000) {
+        count += 100;
+        if (count > ms || isPaused.value) {
             clearInterval(sleepInterval);
             resolve();
         }
-    }, 1000);
-    // sleepTimeout = setTimeout(resolve, ms);
+    }, 100);
 });
 
 function formatTime(seconds) {
@@ -279,102 +276,141 @@ export default function useWorkout(page = null) {
         }
     };
 
-    const start = async () => {
-        isWorkoutStart.value = true;
-        roundCount.value = `1/${workout.value.params.roundCount || workout.value.params.length}`;
-        let debugPrepare = debug('prepare');
-        timerInterval = timerCount(workout.value.prepareTimeMs)
-        isPrepare.value = !isPrepare.value;
-        await sleep(workout.value.prepareTimeMs);
-        isPrepare.value = !isPrepare.value;
-        clearInterval(debugPrepare);
-        clearInterval(timerInterval);
-        if (!isWorkoutStart.value) return;
-        if (!workout.value.isExpand) {
-            for (let round = 0; round < workout.value.params.roundCount; round++) {
-                roundCount.value = `${round + 1}/${workout.value.params.roundCount}`;
-                const debugRound = debug('round');
-                timerInterval = timerCount(workout.value.params.roundTimeMs);
-                isWork.value = !isWork.value;
-
-                const start = Date.now();
-                const end = start + workout.value.params.roundTimeMs;
-
-                await playAudio(bell);
-
-                let p = 0;
-                while (Date.now() < start + workout.value.params.roundTimeMs) {
-                    await playRandomPunch();
-                    p++;
-                    if (p === workout.value.params.punchCount) {
-                        p = 0;
-                        await calcSleep(end, workout.value.params.restBetweenPunchMs)
-                    } else {
-                        await calcSleep(end, 1000)
-                    }
-                }
-
-                clearInterval(debugRound);
+    const restStageTimer = async () => {
+        if (s >= 1) {
+            if (!isWorkoutStart.value || isPaused.value) return;
+            setTimeout(restStageTimer, 100);
+        } else {
+            if (r - 1 < (workout.value.params.roundCount || workout.value.params.length)) {
                 clearInterval(timerInterval);
-                isWork.value = !isWork.value;
+                isRest.value = !isRest.value;
+                workStage();
+            }
+        }
+    }
+
+    const restStage = async () => {
+        currentStageTimer = restStageTimer;
+        timerInterval = timerCount(workout.value.params.restBetweenRoundsMs || workout.value.params[r - 1].restBetweenRoundsMs);
+        isRest.value = true;
+        await playAudio(bell);
+        restStageTimer();
+    }
+
+    const workStageTimer = async function workStageTimer() {
+        if (!workout.value.isExpand) {
+            if (s >= 1) {
+                await playRandomPunch();
+                p++;
+                if (p === (workout.value.params.punchCount)) {
+                    p = 0;
+                    await calcSleep(end, workout.value.params.restBetweenPunchMs)
+                } else {
+                    await calcSleep(end, 1000)
+                }
+                if (isPaused.value) {
+                    return;
+                }
                 if (!isWorkoutStart.value) return;
+                setTimeout(workStageTimer, 100);
 
-                playAudio(bell);
-
-                if (round < workout.value.params.roundCount - 1) {
-                    const debugRest = debug('rest');
-                    timerInterval = timerCount(workout.value.params.restBetweenRoundsMs)
-                    isRest.value = !isRest.value;
-                    await sleep(workout.value.params.restBetweenRoundsMs);
-                    isRest.value = !isRest.value;
-                    clearInterval(debugRest);
-                    clearInterval(timerInterval);
-                    if (!isWorkoutStart.value) return;
+            } else {
+                clearInterval(timerInterval);
+                isWork.value = false;
+                if (r < workout.value.params.roundCount) {
+                    restStage();
+                } else {
+                    r = 0;
+                    isWorkoutStart.value = !isWorkoutStart;
+                    await playAudio(bell);
                 }
             }
         } else {
-            for (let round = 0; round < workout.value.params.length; round++) {
-                roundCount.value = `${round + 1}/${workout.value.params.length}`;
-                const debugRound = debug('round');
-                timerInterval = timerCount(workout.value.params[round].roundTimeMs)
-                isWork.value = !isWork.value;
-
-                const start = Date.now();
-                const end = start + workout.value.params[round].roundTimeMs;
-
-                await playAudio(bell);
-
-                let p = 0;
-                while (Date.now() < start + workout.value.params[round].roundTimeMs) {
-                    await playRandomPunch(workout.value.params[round].checked);
-                    p++;
-                    if (p === workout.value.params[round].punchCount) {
-                        p = 0;
-                        await calcSleep(end, workout.value.params[round].restBetweenPunchMs);
-                    } else {
-                        await calcSleep(end, 1000);
-                    }
+            if (s >= 1) {
+                await playRandomPunch(workout.value.params[r].checked);
+                p++;
+                if (p === (workout.value.params[r].punchCount)) {
+                    p = 0;
+                    await calcSleep(end, workout.value.params[r].restBetweenPunchMs)
+                } else {
+                    await calcSleep(end, 1000)
                 }
-
-                clearInterval(debugRound);
+                if (isPaused.value) {
+                    return;
+                }
+                if (!isWorkoutStart.value) return;
+                setTimeout(workStageTimer, 100);
+            } else {
                 clearInterval(timerInterval);
-                isWork.value = !isWork.value;
-
-                playAudio(bell);
-
-                if (round < workout.value.params.length - 1) {
-                    const debugRest = debug('rest');
-                    timerInterval = timerCount(workout.value.params[round].restBetweenRoundsMs)
-                    isRest.value = !isRest.value;
-                    await sleep(workout.value.params[round].restBetweenRoundsMs);
-                    isRest.value = !isRest.value;
-                    clearInterval(debugRest);
-                    clearInterval(timerInterval);
+                isWork.value = false;
+                r++;
+                if (r < workout.value.params.length) {
+                    restStage();
+                } else {
+                    isWorkoutStart.value = !isWorkoutStart;
+                    await playAudio(bell);
                 }
             }
         }
-        isWorkoutStart.value = false;
+
+    }
+
+    const workStage = async () => {
+        currentStageTimer = workStageTimer;
+        roundCount.value = `${r + 1}/${workout.value.params.roundCount || workout.value.params.length}`;
+        timerInterval = timerCount(workout.value.params.roundTimeMs || workout.value.params[r].roundTimeMs);
+        isWork.value = true;
+        if (workout.value.isExpand)
+            end = workout.value.isExpand
+                ? Date.now() + workout.value.params[r].roundTimeMs
+                : Date.now() + workout.value.params.roundTimeMs
+        await playAudio(bell);
+        workStageTimer();
+    }
+
+    const prepareStageTimer = async () => {
+        if (s >= 1) {
+            if (!isWorkoutStart.value || isPaused.value) return;
+            setTimeout(prepareStageTimer, 100);
+        } else {
+            clearInterval(timerInterval);
+            isPrepare.value = false;
+            workStage();
+        }
+    }
+
+    const prepareStage = async () => {
+        currentStageTimer = prepareStageTimer;
+        timerInterval = timerCount(workout.value.prepareTimeMs)
+        isPrepare.value = true;
+        prepareStageTimer();
+    }
+
+    const start = async () => {
+        isWorkoutStart.value = true;
+        roundCount.value = `1/${workout.value.params.roundCount || workout.value.params.length}`;
+        prepareStage();
     };
+
+    const stop = () => {
+        isWorkoutStart.value = false;
+        clearInterval(timerInterval);
+        isPrepare.value = false;
+        isWork.value = false;
+        isRest.value = false;
+    }
+
+    const pause = () => {
+        isPaused.value = true;
+    }
+
+    const resume = () => {
+        isResumed = true;
+        isPaused.value = false;
+        if (currentStageTimer.name === 'workStageTimer')
+            end = Date.now() + s * 1000;
+        currentStageTimer();
+    }
 
     const addRound = async (index, order = '') => {
         await workout.value.params.splice((order === 'after' ? index + 1 : index), 0, copyObject(expandMode));
@@ -425,12 +461,6 @@ export default function useWorkout(page = null) {
             })
     }
 
-    const stop = () => {
-        isWorkoutStart.value = false;
-        sleepResolve.value();
-        clearTimeout(sleepTimeout);
-    }
-
     return {
         voices,
         workout,
@@ -454,6 +484,8 @@ export default function useWorkout(page = null) {
         workoutStore,
         workoutUpdate,
         workoutDelete,
-        stop
+        stop,
+        pause,
+        resume
     }
 }
