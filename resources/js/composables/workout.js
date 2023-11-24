@@ -1,4 +1,4 @@
-import {computed, reactive, ref, watch} from "vue";
+import {computed, reactive, ref, watch, watchEffect} from "vue";
 import _ from "lodash";
 import {useRoute, useRouter} from "vue-router";
 
@@ -179,15 +179,15 @@ const defineWorkoutGeneralProps = (workout) => {
             totalTime: {
                 get: function () {
                     if (!workout.isExpand) {
-                        const totalS = (workout.prepareTimeM * 60 + parseInt(workout.prepareTimeS))
+                        const totalS = (workout.prepareTimeM * 60 + workout.prepareTimeS)
                             + (workout.params.roundCount * (workout.params.roundTimeM * 60 + workout.params.roundTimeS))
                             + ((workout.params.roundCount - 1) * (workout.params.restBetweenRoundsM * 60 + workout.params.restBetweenRoundsS));
 
                         return formatTime(totalS);
                     } else {
-                        let totalS = workout.prepareTimeM * 60 + parseInt(workout.prepareTimeS);
+                        let totalS = workout.prepareTimeM * 60 + workout.prepareTimeS;
                         workout.params.forEach(round => {
-                            totalS += (round.roundTimeM * 60 + parseInt(round.roundTimeS)) + (round.restBetweenRoundsM * 60 + parseInt(round.restBetweenRoundsS));
+                            totalS += (round.roundTimeM * 60 + round.roundTimeS) + (round.restBetweenRoundsM * 60 + round.restBetweenRoundsS);
                         })
                         totalS -= workout.params[workout.params.length - 1].restBetweenRoundsS;
 
@@ -210,6 +210,21 @@ const defineWorkoutProps = (workout) => {
     }
 };
 
+const defineWorkoutWatchers = (obj) => {
+    obj.watchers = [];
+    for (const key in obj) {
+        if (typeof obj[key] === 'number')
+            obj.watchers.push(
+                watch(() => obj[key], (newVal) => {
+                    if (typeof obj[key] === 'string' && !isNaN(obj[key])) {
+                        console.log(key, newVal);
+                        obj[key] = parseInt(newVal);
+                    }
+                })
+            );
+    }
+}
+
 export default function useWorkout(page = null) {
     const router = useRouter();
     const route = useRoute();
@@ -224,17 +239,22 @@ export default function useWorkout(page = null) {
         });
         await defineWorkoutProps(workoutTemp);
         workout.value = workoutTemp;
+        defineWorkoutWatchers(workout.value)
+        defineWorkoutWatchers(workout.value.params)
 
         if (page === 'workouts.show') {
             if (workouts.value.length > 0) {
                 isWorkoutEdit.value = false;
                 const copiedWorkout = reactive(await _.cloneDeep(workouts.value.find(work => work.id === parseInt(route.params.id))));
+                defineWorkoutWatchers(copiedWorkout);
                 if (copiedWorkout.isExpand) {
                     copiedWorkout.params.forEach((round, index, array) => {
                         array[index] = reactive(round);
+                        defineWorkoutWatchers(round);
                     })
                 } else {
                     copiedWorkout.params = reactive(copiedWorkout.params);
+                    defineWorkoutWatchers(copiedWorkout.params);
                 }
                 await defineWorkoutProps(copiedWorkout);
                 workout.value = copiedWorkout;
@@ -277,8 +297,8 @@ export default function useWorkout(page = null) {
     };
 
     const restStageTimer = async () => {
+        if (!isWorkoutStart.value || isPaused.value) return;
         if (s >= 1) {
-            if (!isWorkoutStart.value || isPaused.value) return;
             setTimeout(restStageTimer, 100);
         } else {
             if (r - 1 < (workout.value.params.roundCount || workout.value.params.length)) {
@@ -298,11 +318,12 @@ export default function useWorkout(page = null) {
     }
 
     const workStageTimer = async function workStageTimer() {
+        if (!isWorkoutStart.value) return;
         if (!workout.value.isExpand) {
             if (s >= 1) {
                 await playRandomPunch();
                 p++;
-                if (p === (workout.value.params.punchCount)) {
+                if (p === workout.value.params.punchCount) {
                     p = 0;
                     await calcSleep(end, workout.value.params.restBetweenPunchMs)
                 } else {
@@ -311,7 +332,6 @@ export default function useWorkout(page = null) {
                 if (isPaused.value) {
                     return;
                 }
-                if (!isWorkoutStart.value) return;
                 setTimeout(workStageTimer, 100);
 
             } else {
@@ -329,7 +349,7 @@ export default function useWorkout(page = null) {
             if (s >= 1) {
                 await playRandomPunch(workout.value.params[r].checked);
                 p++;
-                if (p === (workout.value.params[r].punchCount)) {
+                if (p === workout.value.params[r].punchCount) {
                     p = 0;
                     await calcSleep(end, workout.value.params[r].restBetweenPunchMs)
                 } else {
@@ -360,17 +380,16 @@ export default function useWorkout(page = null) {
         roundCount.value = `${r + 1}/${workout.value.params.roundCount || workout.value.params.length}`;
         timerInterval = timerCount(workout.value.params.roundTimeMs || workout.value.params[r].roundTimeMs);
         isWork.value = true;
-        if (workout.value.isExpand)
-            end = workout.value.isExpand
-                ? Date.now() + workout.value.params[r].roundTimeMs
-                : Date.now() + workout.value.params.roundTimeMs
+        end = workout.value.isExpand
+            ? Date.now() + workout.value.params[r].roundTimeMs
+            : Date.now() + workout.value.params.roundTimeMs
         await playAudio(bell);
         workStageTimer();
     }
 
     const prepareStageTimer = async () => {
+        if (!isWorkoutStart.value || isPaused.value) return;
         if (s >= 1) {
-            if (!isWorkoutStart.value || isPaused.value) return;
             setTimeout(prepareStageTimer, 100);
         } else {
             clearInterval(timerInterval);
@@ -394,6 +413,9 @@ export default function useWorkout(page = null) {
 
     const stop = () => {
         isWorkoutStart.value = false;
+        r = 0;
+        s = 0;
+        p = 0;
         clearInterval(timerInterval);
         isPrepare.value = false;
         isWork.value = false;
@@ -413,7 +435,9 @@ export default function useWorkout(page = null) {
     }
 
     const addRound = async (index, order = '') => {
-        await workout.value.params.splice((order === 'after' ? index + 1 : index), 0, copyObject(expandMode));
+        const i = (order === 'after') ? index + 1 : index
+        await workout.value.params.splice(i, 0, copyObject(expandMode));
+        defineWorkoutWatchers(workout.value.params[i]);
     };
 
     const removeRound = (index) => {
@@ -425,6 +449,11 @@ export default function useWorkout(page = null) {
         workout.value.params = workout.value.isExpand
             ? [reactive(copyObject(expandMode))]
             : reactive(copyObject(simpleMode));
+        if (workout.value.isExpand) {
+            defineWorkoutWatchers(workout.value.params[0])
+        } else {
+            defineWorkoutWatchers(workout.value.params)
+        }
     };
 
     const workoutStore = async () => {
