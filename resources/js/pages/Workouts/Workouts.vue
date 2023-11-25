@@ -1,6 +1,6 @@
 <template>
     <div class="flex">
-        <aside class="w-64 bg-gray-500 p-4 h-screen">
+        <aside class="w-64 bg-gray-500 p-4 min-h-screen flex-shrink-0">
             <router-link :to="{name: 'workouts.create'}" class="text-white text-2xl font-semibold mb-4">Добавить
                 тренировку
             </router-link>
@@ -21,7 +21,7 @@
                 Тренировок пока нет...
             </template>
         </aside>
-        <div class="flex flex-col items-center flex-grow">
+        <div class="flex flex-col flex-grow">
             <template v-if="currentRouteName === 'workouts.show'">
                 <router-view v-if="workouts.length > 0"/>
             </template>

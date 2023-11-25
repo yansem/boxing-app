@@ -1,5 +1,5 @@
 <template>
-    <div class="flex">
+    <div class="flex flex-wrap justify-center">
         <table v-for="(round, index) in workout.params" :key="index"
                class="border-collapse border border-slate-400">
             <tbody>

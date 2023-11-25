@@ -7,6 +7,8 @@
 
 <script setup>
 
-const props = defineProps(['roundCount', 'timer']);
+import useWorkout from "@/composables/workout.js";
+
+const {roundCount, timer} = useWorkout();
 
 </script>

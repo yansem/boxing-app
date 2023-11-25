@@ -217,7 +217,6 @@ const defineWorkoutWatchers = (obj) => {
             obj.watchers.push(
                 watch(() => obj[key], (newVal) => {
                     if (typeof obj[key] === 'string' && !isNaN(obj[key])) {
-                        console.log(key, newVal);
                         obj[key] = parseInt(newVal);
                     }
                 })

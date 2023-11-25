@@ -7,9 +7,6 @@
         </template>
         <button class="bg-yellow-400 py-2 px-4 rounded" v-if="isWorkoutEdit" @click="workoutUpdate">Сохранить</button>
     </template>
-    <template v-else>
-        <workout-timer :round-count="roundCount" :timer="timer"/>
-    </template>
 </template>
 
 <script setup>
@@ -19,20 +16,15 @@ import {useRoute, useRouter} from "vue-router";
 import ExpandMode from "@/components/ExpandMode.vue";
 import SimpleMode from "@/components/SimpleMode.vue";
 import GeneralForm from "@/components/GeneralForm.vue";
-import WorkoutTimer from "@/components/WorkoutTimer.vue";
 
 const route = useRoute();
 const router = useRouter();
 
 const {
     workout,
-    workouts,
     isWorkoutEdit,
     isWorkoutStart,
-    roundCount,
-    timer,
     init,
-    start,
     workoutUpdate
 } = useWorkout(useRoute().name);
 
