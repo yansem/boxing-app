@@ -336,6 +336,7 @@ export default function useWorkout(page = null) {
             } else {
                 clearInterval(timerInterval);
                 isWork.value = false;
+                r++;
                 if (r < workout.value.params.roundCount) {
                     restStage();
                 } else {
@@ -412,6 +413,7 @@ export default function useWorkout(page = null) {
 
     const stop = () => {
         isWorkoutStart.value = false;
+        isPaused.value = false;
         r = 0;
         s = 0;
         p = 0;

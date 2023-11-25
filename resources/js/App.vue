@@ -5,40 +5,32 @@
             <div class="animate-spin rounded-full h-32 w-32 border-t-4 border-blue-500"></div>
         </div>
         <template v-else>
-            <template v-if="isWorkoutStart">
-                <div class="h-screen" :class="{'bg-green-600': isPrepare, 'bg-red-600': isWork, 'bg-blue-500': isRest}">
-                <control-panel/>
-                <workout-timer/>
-                </div>
-            </template>
-            <template v-else>
-                <header class="bg-black">
-                    <div class="flex">
-                        <router-link :to="{name: 'main'}" class="bg-yellow-400 py-2 px-4 rounded">Logo</router-link>
-                        <div class="flex-1">
-                            <div class="flex justify-end">
-                                <template v-if="isAuth">
-                                    <router-link :to="{name: 'workouts'}" class="bg-yellow-400 py-2 px-4 rounded">
-                                        Тренировки
-                                    </router-link>
-                                    <button class="bg-yellow-400 py-2 px-4 rounded">{{ user.login }}</button>
-                                    <button class="bg-yellow-400 py-2 px-4 rounded" @click="logout">Выйти</button>
-                                </template>
-                                <template v-else>
-                                    <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowLogin = true">Войти
-                                    </button>
-                                    <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowRegister = true">
-                                        Регистрация
-                                    </button>
-                                </template>
-                            </div>
+            <header class="bg-black">
+                <div class="flex">
+                    <router-link :to="{name: 'main'}" class="bg-yellow-400 py-2 px-4 rounded">Logo</router-link>
+                    <div class="flex-1">
+                        <div class="flex justify-end">
+                            <template v-if="isAuth">
+                                <router-link :to="{name: 'workouts'}" class="bg-yellow-400 py-2 px-4 rounded">
+                                    Тренировки
+                                </router-link>
+                                <button class="bg-yellow-400 py-2 px-4 rounded">{{ user.login }}</button>
+                                <button class="bg-yellow-400 py-2 px-4 rounded" @click="logout">Выйти</button>
+                            </template>
+                            <template v-else>
+                                <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowLogin = true">Войти
+                                </button>
+                                <button class="bg-yellow-400 py-2 px-4 rounded" @click="isShowRegister = true">
+                                    Регистрация
+                                </button>
+                            </template>
                         </div>
                     </div>
-                </header>
-                <div>
-                    <router-view></router-view>
                 </div>
-            </template>
+            </header>
+            <div>
+                <router-view></router-view>
+            </div>
         </template>
         <div v-if="isShowLogin" class="fixed inset-0 flex items-center justify-center">
             <div class="modal-bg absolute inset-0 bg-black opacity-50"></div>
