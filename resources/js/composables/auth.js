@@ -15,31 +15,31 @@ const loginForm = reactive({
 const user = reactive({
     login: ''
 })
+const validationErrors = ref([]);
 
 export default function useAuth(getWorkouts) {
     const router = useRouter();
     const registration = async () => {
-        isShowRegister.value = false;
+
         await axios.post('/register', registerForm)
-            .then(response => {
-                loginUser(response);
+            .then(async response => {
+                isShowRegister.value = false;
+                await loginUser(response);
             })
             .catch(error => {
-                isShowRegister.value = true;
-                console.log(error);
+                validationErrors.value = error.response.data.errors;
             })
     }
 
     const submitLogin = async () => {
-        isShowLogin.value = false;
         await axios.get('/sanctum/csrf-cookie').then(async response => {
             await axios.post('/login', loginForm)
                 .then(async response => {
+                    isShowLogin.value = false;
                     await loginUser(response)
                 })
                 .catch(error => {
-                    isShowLogin.value = true;
-                    console.log(error);
+                    validationErrors.value = error.response.data.errors;
                 })
         });
     }
@@ -69,6 +69,20 @@ export default function useAuth(getWorkouts) {
             })
     }
 
+    const closeLogin = () => {
+        isShowLogin.value = false;
+        validationErrors.value = [];
+        loginForm.login = '';
+        loginForm.password = '';
+    }
+
+    const closeRegister = () => {
+        isShowRegister.value = false;
+        validationErrors.value = [];
+        registerForm.login = '';
+        registerForm.password = '';
+    }
+
     return {
         user,
         getUser,
@@ -77,8 +91,11 @@ export default function useAuth(getWorkouts) {
         isShowRegister,
         loginForm,
         registerForm,
+        validationErrors,
         registration,
         submitLogin,
-        logout
+        logout,
+        closeLogin,
+        closeRegister
     }
 }
