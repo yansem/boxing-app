@@ -10,4 +10,5 @@
 <div id="app"></div>
 @vite('resources/js/app.js')
 </body>
+<script src="https://kit.fontawesome.com/4ed2772191.js" crossorigin="anonymous"></script>
 </html>

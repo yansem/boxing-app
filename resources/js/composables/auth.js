@@ -19,24 +19,26 @@ const user = reactive({
 export default function useAuth(getWorkouts) {
     const router = useRouter();
     const registration = async () => {
+        isShowRegister.value = false;
         await axios.post('/register', registerForm)
             .then(response => {
-                isShowRegister.value = false;
                 loginUser(response);
             })
             .catch(error => {
+                isShowRegister.value = true;
                 console.log(error);
             })
     }
 
     const submitLogin = async () => {
+        isShowLogin.value = false;
         await axios.get('/sanctum/csrf-cookie').then(async response => {
             await axios.post('/login', loginForm)
                 .then(async response => {
-                    isShowLogin.value = false;
                     await loginUser(response)
                 })
                 .catch(error => {
+                    isShowLogin.value = true;
                     console.log(error);
                 })
         });

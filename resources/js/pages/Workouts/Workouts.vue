@@ -11,8 +11,8 @@
                         <router-link :to="{name: 'workouts.show', params: {id: work.id}}"
                                      class="text-white hover:text-yellow-400">{{ work.title }}
                         </router-link>
-                        <button v-show="hoveredItem === index" @click="workoutDelete" class="text-red-500">
-                            <TrashIcon class="h-5 w-5"/>
+                        <button v-show="hoveredItem === index" @click="workoutDelete">
+                            <i class="fa-solid fa-trash" style="color: #db0a2a;"></i>
                         </button>
                     </li>
                 </ul>
@@ -31,7 +31,6 @@
 </template>
 
 <script setup>
-import {TrashIcon} from '@heroicons/vue/24/outline';
 import useWorkout from "@/composables/workout.js";
 import {onBeforeMount, ref, watch} from "vue";
 import {useRouter} from "vue-router";
